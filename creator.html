@@ -707,6 +707,16 @@ TTSEngine.init();
 async function init() {
   const params = new URLSearchParams(location.search);
   const id = params.get('id');
+
+  // 检测从 Chrome 扩展导入的标记
+  if (params.get('imported') === '1') {
+    const stepCount = params.get('steps');
+    const msg = stepCount
+      ? `🎉 已从录制器导入 ${stepCount} 个步骤，可在此编辑标注！`
+      : '🎉 录制内容已成功导入，可以开始编辑！';
+    setTimeout(() => showToast(msg, 'success', 5000), 800);
+  }
+
   if (id) {
     state.demo = await DemoDB.get(id);
   }

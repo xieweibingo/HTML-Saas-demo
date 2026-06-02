@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  width: 300px;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #fff;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ====== Header ====== */
+.header {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header-icon {
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 900; color: #fff;
+  flex-shrink: 0;
+}
+.header-title { color: #fff; font-weight: 700; font-size: 0.95rem; }
+.header-sub { color: rgba(255,255,255,0.7); font-size: 0.75rem; margin-top: 1px; }
+.header-badge {
+  margin-left: auto;
+  background: #ef4444;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  animation: badge-pulse 1.5s ease-in-out infinite;
+}
+@keyframes badge-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+}
+
+/* ====== Body ====== */
+.body { padding: 16px; }
+
+/* ====== State: Idle ====== */
+#state-idle {}
+.idle-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.55;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.steps-list {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 16px;
+}
+.step-item {
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.step-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #6366f1; color: #fff;
+  font-size: 0.7rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.step-text { font-size: 0.8rem; color: #475569; line-height: 1.4; }
+.step-text strong { color: #0f172a; font-weight: 600; }
+
+/* ====== State: Recording ====== */
+#state-recording { display: none; }
+.rec-status {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.rec-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #ef4444;
+  animation: rec-blink 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes rec-blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.rec-label { font-weight: 700; font-size: 0.875rem; color: #dc2626; }
+.rec-count {
+  margin-left: auto;
+  background: #6366f1;
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.rec-url {
+  font-size: 0.75rem; color: #94a3b8;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  margin-bottom: 14px; padding: 0 2px;
+}
+.rec-tips {
+  font-size: 0.78rem; color: #64748b;
+  background: #f8fafc; border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+.rec-tips li { list-style: none; padding-left: 0; }
+.rec-tips li::before { content: ''; }
+
+/* ====== State: Done ====== */
+#state-done { display: none; }
+.done-header {
+  text-align: center; padding: 16px 0 12px;
+}
+.done-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #059669);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; margin: 0 auto 10px;
+  box-shadow: 0 4px 16px rgba(16,185,129,0.3);
+}
+.done-title { font-weight: 700; font-size: 1rem; color: #0f172a; margin-bottom: 4px; }
+.done-sub { font-size: 0.8rem; color: #64748b; }
+.step-thumbnails {
+  display: flex; gap: 5px; overflow-x: auto;
+  padding: 10px 0;
+  margin-bottom: 12px;
+}
+.step-thumb-mini {
+  flex-shrink: 0;
+  width: 64px; height: 40px;
+  border-radius: 5px;
+  background: #e2e8f0;
+  overflow: hidden;
+  border: 1.5px solid #e2e8f0;
+  position: relative;
+}
+.step-thumb-mini img { width: 100%; height: 100%; object-fit: cover; }
+.step-thumb-num {
+  position: absolute; bottom: 2px; left: 2px;
+  background: rgba(0,0,0,0.55);
+  color: #fff; font-size: 0.55rem; font-weight: 700;
+  padding: 1px 4px; border-radius: 2px;
+}
+
+/* ====== Buttons ====== */
+.btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 9px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.btn + .btn { margin-top: 7px; }
+.btn-primary {
+  background: #6366f1; color: #fff;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.35);
+}
+.btn-primary:hover { background: #4f46e5; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-danger { background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; }
+.btn-danger:hover { background: #fee2e2; }
+.btn-secondary { background: #f1f5f9; color: #475569; border: 1.5px solid #e2e8f0; }
+.btn-secondary:hover { background: #e2e8f0; }
+
+/* ====== Settings ====== */
+.settings-section {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+.settings-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.settings-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  color: #0f172a;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.settings-input:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.12); }
+.settings-hint { font-size: 0.7rem; color: #94a3b8; margin-top: 4px; }
+.settings-save {
+  margin-top: 6px;
+  padding: 5px 12px;
+  background: #e0e7ff;
+  color: #6366f1;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.settings-save:hover { background: #c7d2fe; }
+
+/* ====== Loading overlay ====== */
+.loading-overlay {
+  display: none;
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.85);
+  align-items: center; justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+  border-radius: inherit;
+}
+.loading-overlay.show { display: flex; }
+.spinner {
+  width: 28px; height: 28px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 0.82rem; color: #64748b; font-weight: 500; }
+
+/* Relative wrapper for loading overlay */
+.popup-inner { position: relative; }
+
+/* Toast */
+.popup-toast {
+  position: fixed; bottom: 12px; left: 12px; right: 12px;
+  background: #0f172a; color: #fff;
+  padding: 9px 14px; border-radius: 8px;
+  font-size: 0.8rem; font-weight: 500;
+  z-index: 100;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.25s;
+}
+.popup-toast.show { transform: translateY(0); opacity: 1; }
+.popup-toast.success { background: #065f46; }
+.popup-toast.error { background: #991b1b; }
+</style>
+</head>
+<body>
+<div class="popup-inner">
+  <!-- Header -->
+  <div class="header" id="header">
+    <div class="header-icon">W</div>
+    <div>
+      <div class="header-title">演示Demo 录制器</div>
+      <div class="header-sub" id="headerSub">点击产品，自动生成走查演示</div>
+    </div>
+    <div class="header-badge hidden" id="recBadge">REC</div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+
+    <!-- State: Idle -->
+    <div id="state-idle">
+      <div class="idle-desc">
+        🎬 无需手动截图！点击"开始录制"后，操作你的产品页面，每次点击自动截图，停止后一键导入演示创建器。
+      </div>
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-text"><strong>点击开始录制</strong>，切换到你的产品页面</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-text"><strong>正常操作产品</strong>，每次点击自动截图</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>停止录制</strong>，自动导入演示创建器编辑</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="btnStart">▶ 开始录制当前页面</button>
+
+      <div class="settings-section">
+        <div class="settings-label">创建器地址</div>
+        <input type="url" class="settings-input" id="creatorUrl" placeholder="http://localhost:8080/creator.html">
+        <div class="settings-hint">修改后点击保存，支持本地和公网地址</div>
+        <button class="settings-save" id="btnSaveUrl">保存地址</button>
+      </div>
+    </div>
+
+    <!-- State: Recording -->
+    <div id="state-recording">
+      <div class="rec-status">
+        <div class="rec-dot"></div>
+        <span class="rec-label">录制中...</span>
+        <span class="rec-count" id="recCount">0 步</span>
+      </div>
+      <div class="rec-url" id="recUrl">—</div>
+      <div class="rec-tips">
+        <li>🖱 点击页面任意位置自动截图</li>
+        <li>📸 工具栏的"手动截图"按钮可强制截图</li>
+        <li>🔄 跨页面跳转自动继续录制</li>
+      </div>
+      <button class="btn btn-primary" id="btnStopAndImport">■ 停止录制 &amp; 导入创建器</button>
+      <button class="btn btn-secondary" id="btnManualCapture" style="margin-top:7px">📸 手动截图当前页面</button>
+      <button class="btn btn-danger" id="btnCancel">✕ 放弃录制</button>
+    </div>
+
+    <!-- State: Done / Preview -->
+    <div id="state-done">
+      <div class="done-header">
+        <div class="done-icon">✓</div>
+        <div class="done-title" id="doneTitle">录制完成！</div>
+        <div class="done-sub" id="doneSub">正在导入到创建器...</div>
+      </div>
+      <div class="step-thumbnails" id="stepThumbnails"></div>
+      <button class="btn btn-primary" id="btnImportAgain">📤 重新导入到创建器</button>
+      <button class="btn btn-secondary" id="btnNewRecording" style="margin-top:7px">＋ 新建录制</button>
+    </div>
+
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">正在导入...</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="popup-toast" id="toast"></div>
+
+<script src="popup.js"></script>
+</body>
+</html>
