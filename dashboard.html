@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据看板 — 演示Demo</title>
+<link rel="stylesheet" href="css/main.css">
+<style>
+* { box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+body { display: flex; flex-direction: column; background: var(--gray-50); }
+
+/* ====== Top Header ====== */
+.dash-header {
+  height: 56px; flex-shrink: 0;
+  background: #fff; border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 20px; z-index: 50;
+}
+.dash-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 800; font-size: 1rem; color: var(--gray-900);
+  text-decoration: none; padding-right: 16px;
+  border-right: 1px solid var(--gray-200);
+}
+.dash-logo-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 7px; display: flex; align-items: center;
+  justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 800;
+}
+.dash-breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.85rem; color: var(--gray-500);
+}
+.dash-breadcrumb .crumb-sep { color: var(--gray-300); }
+.dash-breadcrumb .crumb-current {
+  font-weight: 600; color: var(--gray-800);
+}
+.dash-header-actions { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--radius-sm);
+  font-size: 0.82rem; font-weight: 600; color: var(--primary);
+  background: var(--primary-light); border: 1px solid rgba(99,102,241,0.25);
+  cursor: pointer; transition: all var(--transition);
+  text-decoration: none;
+}
+.back-btn:hover { background: #c7d2fe; }
+
+/* ====== Layout ====== */
+.dash-body { flex: 1; display: flex; overflow: hidden; }
+
+/* ====== Sidebar ====== */
+.dash-sidebar {
+  width: 240px; flex-shrink: 0;
+  background: #fff; border-right: 1px solid var(--gray-200);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.sidebar-header {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.sidebar-title {
+  font-size: 0.72rem; font-weight: 700; color: var(--gray-400);
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.sidebar-list {
+  flex: 1; overflow-y: auto; padding: 8px;
+}
+.demo-item {
+  padding: 10px 12px; border-radius: var(--radius);
+  cursor: pointer; transition: all var(--transition);
+  margin-bottom: 4px; border: 1.5px solid transparent;
+}
+.demo-item:hover { background: var(--gray-50); border-color: var(--gray-200); }
+.demo-item.active {
+  background: var(--primary-light);
+  border-color: rgba(99,102,241,0.3);
+}
+.demo-item-title {
+  font-size: 0.82rem; font-weight: 600; color: var(--gray-800);
+  margin-bottom: 5px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.demo-item.active .demo-item-title { color: var(--primary); }
+.demo-item-meta {
+  display: flex; align-items: center; gap: 8px;
+}
+.views-badge {
+  font-size: 0.72rem; font-weight: 600;
+  background: var(--gray-100); color: var(--gray-600);
+  padding: 2px 7px; border-radius: var(--radius-full);
+}
+.demo-item.active .views-badge {
+  background: rgba(99,102,241,0.15); color: var(--primary);
+}
+.completion-pct {
+  font-size: 0.72rem; color: var(--gray-400); font-weight: 500;
+}
+.demo-item.active .completion-pct { color: #6366f1aa; }
+
+/* ====== Main Content ====== */
+.dash-main {
+  flex: 1; overflow-y: auto;
+  padding: 24px 28px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+
+/* ====== Overview Cards ====== */
+.overview-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.stat-card {
+  background: #fff; border-radius: var(--radius-lg);
+  padding: 20px; border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-xs);
+  transition: all var(--transition);
+}
+.stat-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+.stat-card-label {
+  font-size: 0.78rem; font-weight: 600; color: var(--gray-500);
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.stat-card-label .stat-icon {
+  width: 28px; height: 28px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+}
+.stat-icon.purple { background: var(--primary-light); }
+.stat-icon.blue { background: #dbeafe; }
+.stat-icon.green { background: #d1fae5; }
+.stat-icon.amber { background: #fef3c7; }
+.stat-card-value {
+  font-size: 2rem; font-weight: 800; color: var(--gray-900);
+  line-height: 1.1; letter-spacing: -0.03em;
+}
+.stat-card-sub {
+  font-size: 0.75rem; color: var(--gray-400); margin-top: 4px;
+}
+
+/* ====== Chart Sections ====== */
+.chart-section {
+  background: #fff; border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+}
+.chart-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.chart-title {
+  font-size: 0.92rem; font-weight: 700; color: var(--gray-800);
+  display: flex; align-items: center; gap: 8px;
+}
+.chart-subtitle {
+  font-size: 0.75rem; color: var(--gray-400);
+}
+.chart-body { padding: 20px; }
+.chart-body canvas {
+  display: block;
+  width: 100%;
+}
+
+/* Grid for charts side-by-side */
+.charts-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+/* ====== Empty State ====== */
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 60px 20px;
+  color: var(--gray-400);
+}
+.empty-state-icon {
+  width: 80px; height: 80px;
+  background: var(--gray-100);
+  border-radius: var(--radius-xl);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem; margin: 0 auto 20px;
+}
+.empty-state h3 {
+  font-size: 1.1rem; font-weight: 700; color: var(--gray-600);
+  margin-bottom: 8px;
+}
+.empty-state p {
+  font-size: 0.85rem; color: var(--gray-400);
+  max-width: 280px; line-height: 1.6; margin-bottom: 20px;
+}
+.empty-create-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px; border-radius: var(--radius);
+  background: var(--primary); color: #fff;
+  font-size: 0.88rem; font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition);
+}
+.empty-create-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+
+/* ====== Selected Demo Header ====== */
+.selected-demo-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 4px;
+}
+.selected-demo-title {
+  font-size: 1.15rem; font-weight: 800; color: var(--gray-900);
+}
+.selected-demo-meta {
+  display: flex; gap: 16px; align-items: center;
+}
+.meta-chip {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.78rem; font-weight: 600;
+  padding: 4px 10px; border-radius: var(--radius-full);
+  background: var(--gray-100); color: var(--gray-600);
+}
+.meta-chip.green { background: #d1fae5; color: #065f46; }
+.meta-chip.blue { background: #dbeafe; color: #1e40af; }
+
+/* Step labels row */
+.step-labels {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;
+}
+.step-label-tag {
+  font-size: 0.7rem; padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: var(--primary-light); color: var(--primary);
+  font-weight: 600;
+}
+
+/* ====== Scrollbar ====== */
+.dash-main::-webkit-scrollbar,
+.sidebar-list::-webkit-scrollbar { width: 5px; }
+.dash-main::-webkit-scrollbar-track,
+.sidebar-list::-webkit-scrollbar-track { background: transparent; }
+.dash-main::-webkit-scrollbar-thumb,
+.sidebar-list::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="dash-header">
+  <a href="app.html" class="dash-logo">
+    <div class="dash-logo-icon">W</div>
+    演示Demo
+  </a>
+  <div class="dash-breadcrumb">
+    <span>首页</span>
+    <span class="crumb-sep">›</span>
+    <span class="crumb-current">数据看板</span>
+  </div>
+  <div class="dash-header-actions">
+    <a href="app.html" class="back-btn">返回看板 →</a>
+  </div>
+</div>
+
+<!-- Body -->
+<div class="dash-body">
+
+  <!-- Sidebar -->
+  <div class="dash-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">演示列表</div>
+    </div>
+    <div class="sidebar-list" id="sidebarList">
+      <div style="padding:20px;text-align:center;color:var(--gray-400);font-size:0.82rem;">加载中...</div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="dash-main" id="dashMain">
+    <!-- Overview cards -->
+    <div class="overview-cards" id="overviewCards">
+      <div class="stat-card">
+        <div class="stat-card-label">
+          <div class="stat-icon purple">📋</div>
+          总演示数
+        </div>
+        <div class="stat-card-value" id="statTotal">—</div>
+        <div class="stat-card-sub">个演示</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">
+          <div class="stat-icon blue">👁</div>
+          总浏览次数
+        </div>
+        <div class="stat-card-value" id="statViews">—</div>
+        <div class="stat-card-sub">次浏览</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">
+          <div class="stat-icon green">✓</div>
+          总完成次数
+        </div>
+        <div class="stat-card-value" id="statCompletions">—</div>
+        <div class="stat-card-sub">次完成</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">
+          <div class="stat-icon amber">📊</div>
+          平均完成率
+        </div>
+        <div class="stat-card-value" id="statAvgRate">—</div>
+        <div class="stat-card-sub">平均完成百分比</div>
+      </div>
+    </div>
+
+    <!-- Demo detail area -->
+    <div id="demoDetail">
+      <!-- will be populated by JS -->
+    </div>
+  </div>
+</div>
+
+<script src="js/db.js"></script>
+<script>
+// ==================== CANVAS CHART FUNCTIONS ====================
+
+function drawFunnelChart(canvas, steps, stepStats, totalViews) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const barH = 44;
+  const barGap = 12;
+  const labelW = 120;
+  const maxBarW = W - labelW - 80;
+  const primaryColor = '#6366f1';
+  const secondaryColor = '#e0e7ff';
+
+  steps.forEach((step, i) => {
+    const views = stepStats?.[i]?.views || 0;
+    const pct = totalViews > 0 ? views / totalViews : 0;
+    const barW = maxBarW * pct;
+    const y = i * (barH + barGap) + 20;
+
+    // Background track
+    ctx.fillStyle = secondaryColor;
+    ctx.beginPath();
+    ctx.roundRect(labelW, y, maxBarW, barH, 6);
+    ctx.fill();
+
+    // Filled bar
+    if (barW > 0) {
+      ctx.fillStyle = primaryColor;
+      ctx.globalAlpha = 0.85 + pct * 0.15;
+      ctx.beginPath();
+      ctx.roundRect(labelW, y, Math.max(barW, 4), barH, 6);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Step label
+    ctx.fillStyle = '#334155';
+    ctx.font = '600 12px PingFang SC, Microsoft YaHei, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`步骤 ${i + 1}`, labelW - 10, y + barH / 2 + 4);
+
+    // Percentage
+    ctx.fillStyle = pct > 0.5 ? '#fff' : '#6366f1';
+    ctx.font = '700 13px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${Math.round(pct * 100)}%`, labelW + Math.max(barW, 8) + 6, y + barH / 2 + 5);
+
+    // View count
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${views} 次`, W - 60, y + barH / 2 + 5);
+  });
+}
+
+function drawSparkline(canvas, data, color = '#6366f1') {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  if (!data.length) return;
+
+  const max = Math.max(...data, 1);
+  const points = data.map((v, i) => ({
+    x: (i / Math.max(data.length - 1, 1)) * (W - 20) + 10,
+    y: H - 20 - ((v / max) * (H - 40))
+  }));
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, color + '40');
+  grad.addColorStop(1, color + '00');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, H - 10);
+  points.forEach(p => ctx.lineTo(p.x, p.y));
+  ctx.lineTo(points[points.length - 1].x, H - 10);
+  ctx.closePath();
+  ctx.fill();
+
+  // Line
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+  ctx.stroke();
+
+  // Dots
+  ctx.fillStyle = color;
+  points.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// ==================== STATE ====================
+let allDemos = [];
+let selectedDemoId = null;
+const funnelResizeObservers = [];
+
+// ==================== OVERVIEW CARDS ====================
+function renderOverviewCards(demos) {
+  const total = demos.length;
+  const totalViews = demos.reduce((s, d) => s + (d.analytics?.views || 0), 0);
+  const totalCompletions = demos.reduce((s, d) => s + (d.analytics?.completions || 0), 0);
+
+  const ratesArr = demos
+    .filter(d => (d.analytics?.views || 0) > 0)
+    .map(d => (d.analytics.completions / d.analytics.views) * 100);
+  const avgRate = ratesArr.length > 0
+    ? (ratesArr.reduce((a, b) => a + b, 0) / ratesArr.length).toFixed(1)
+    : 0;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statViews').textContent = totalViews.toLocaleString();
+  document.getElementById('statCompletions').textContent = totalCompletions.toLocaleString();
+  document.getElementById('statAvgRate').textContent = `${avgRate}%`;
+}
+
+// ==================== SIDEBAR ====================
+function renderSidebar(demos) {
+  const list = document.getElementById('sidebarList');
+  if (!demos.length) {
+    list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--gray-400);font-size:0.82rem;">暂无演示</div>`;
+    return;
+  }
+  list.innerHTML = '';
+  demos.forEach(demo => {
+    const views = demo.analytics?.views || 0;
+    const completions = demo.analytics?.completions || 0;
+    const rate = views > 0 ? Math.round(completions / views * 100) : 0;
+
+    const item = document.createElement('div');
+    item.className = `demo-item${demo.id === selectedDemoId ? ' active' : ''}`;
+    item.dataset.id = demo.id;
+    item.innerHTML = `
+      <div class="demo-item-title">${escHtml(demo.title || '未命名演示')}</div>
+      <div class="demo-item-meta">
+        <span class="views-badge">👁 ${views.toLocaleString()} 次</span>
+        <span class="completion-pct">${rate}% 完成</span>
+      </div>`;
+    item.addEventListener('click', () => {
+      selectedDemoId = demo.id;
+      renderSidebar(allDemos);
+      renderDemoDetail(demo);
+    });
+    list.appendChild(item);
+  });
+}
+
+// ==================== DEMO DETAIL ====================
+function getOrBuildStepStats(demo) {
+  const totalViews = demo.analytics?.views || 0;
+  const existingStats = demo.analytics?.stepStats || [];
+  const steps = demo.steps || [];
+
+  if (!steps.length) return [];
+
+  // Check if any real stat data exists
+  const hasRealData = existingStats.some(s => s && s.views > 0);
+
+  if (hasRealData) {
+    // Fill gaps with 0
+    return steps.map((_, i) => existingStats[i] || { views: 0 });
+  }
+
+  // Generate mock step stats using funnel drop-off
+  return steps.map((_, i) => ({
+    views: Math.round(totalViews * Math.pow(0.7, i))
+  }));
+}
+
+function renderDemoDetail(demo) {
+  const detail = document.getElementById('demoDetail');
+
+  // Clean up old ResizeObservers
+  funnelResizeObservers.forEach(o => o.disconnect());
+  funnelResizeObservers.length = 0;
+
+  const steps = demo.steps || [];
+  const totalViews = demo.analytics?.views || 0;
+  const completions = demo.analytics?.completions || 0;
+  const rate = totalViews > 0 ? Math.round(completions / totalViews * 100) : 0;
+
+  if (!steps.length) {
+    detail.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <h3>${escHtml(demo.title || '未命名演示')}</h3>
+        <p>此演示还没有步骤数据，先在创建器中添加步骤吧。</p>
+        <a href="creator.html?id=${demo.id}" class="empty-create-btn">去编辑 →</a>
+      </div>`;
+    return;
+  }
+
+  const stepStats = getOrBuildStepStats(demo);
+  const sparklineData = stepStats.map(s => s?.views || 0);
+  const funnelH = steps.length * 56 + 40;
+
+  detail.innerHTML = `
+    <div class="selected-demo-header">
+      <div class="selected-demo-title">${escHtml(demo.title || '未命名演示')}</div>
+      <div class="selected-demo-meta">
+        <span class="meta-chip blue">👁 ${totalViews.toLocaleString()} 次浏览</span>
+        <span class="meta-chip green">✓ ${completions.toLocaleString()} 次完成</span>
+        <span class="meta-chip">${rate}% 完成率</span>
+        <span class="meta-chip">${steps.length} 步骤</span>
+      </div>
+    </div>
+    <div class="step-labels" id="stepLabels"></div>
+
+    <div class="charts-row">
+      <!-- Funnel Chart -->
+      <div class="chart-section">
+        <div class="chart-header">
+          <div class="chart-title">📉 步骤漏斗分析</div>
+          <div class="chart-subtitle">各步骤用户留存率</div>
+        </div>
+        <div class="chart-body" id="funnelWrap">
+          <canvas id="funnelCanvas" height="${funnelH}" style="height:${funnelH}px;"></canvas>
+        </div>
+      </div>
+
+      <!-- Sparkline Chart -->
+      <div class="chart-section">
+        <div class="chart-header">
+          <div class="chart-title">📈 步骤浏览趋势</div>
+          <div class="chart-subtitle">各步骤访问量分布</div>
+        </div>
+        <div class="chart-body">
+          <canvas id="sparklineCanvas" height="200" style="height:200px;"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step-by-step stats table -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <div class="chart-title">📋 步骤详情</div>
+        <div class="chart-subtitle">各步骤浏览次数和转化率</div>
+      </div>
+      <div class="chart-body" style="padding:0;">
+        <table id="stepsTable" style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+          <thead>
+            <tr style="background:var(--gray-50);border-bottom:1px solid var(--gray-200);">
+              <th style="padding:10px 20px;text-align:left;color:var(--gray-500);font-weight:600;">步骤</th>
+              <th style="padding:10px 20px;text-align:left;color:var(--gray-500);font-weight:600;">标题</th>
+              <th style="padding:10px 20px;text-align:right;color:var(--gray-500);font-weight:600;">浏览次数</th>
+              <th style="padding:10px 20px;text-align:right;color:var(--gray-500);font-weight:600;">相对完成率</th>
+              <th style="padding:10px 20px;text-align:right;color:var(--gray-500);font-weight:600;">进度条</th>
+            </tr>
+          </thead>
+          <tbody id="stepsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Populate step labels
+  const stepLabels = document.getElementById('stepLabels');
+  steps.forEach((s, i) => {
+    const tag = document.createElement('span');
+    tag.className = 'step-label-tag';
+    tag.textContent = `步骤${i + 1}: ${s.title || `步骤 ${i + 1}`}`;
+    stepLabels.appendChild(tag);
+  });
+
+  // Populate table
+  const tbody = document.getElementById('stepsTableBody');
+  steps.forEach((step, i) => {
+    const sv = stepStats[i]?.views || 0;
+    const pct = totalViews > 0 ? Math.round(sv / totalViews * 100) : 0;
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--gray-100)';
+    tr.innerHTML = `
+      <td style="padding:10px 20px;color:var(--gray-500);font-weight:600;">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+          border-radius:50%;background:var(--primary-light);color:var(--primary);font-size:0.72rem;font-weight:700;">${i + 1}</span>
+      </td>
+      <td style="padding:10px 20px;color:var(--gray-700);font-weight:500;">${escHtml(step.title || `步骤 ${i + 1}`)}</td>
+      <td style="padding:10px 20px;text-align:right;color:var(--gray-800);font-weight:600;">${sv.toLocaleString()}</td>
+      <td style="padding:10px 20px;text-align:right;font-weight:700;color:${pct > 50 ? '#059669' : pct > 25 ? '#d97706' : '#dc2626'};">${pct}%</td>
+      <td style="padding:10px 20px;">
+        <div style="background:var(--gray-100);border-radius:4px;height:8px;min-width:80px;overflow:hidden;">
+          <div style="background:var(--primary);height:100%;width:${pct}%;border-radius:4px;transition:width 0.4s;"></div>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Draw charts after DOM is ready
+  requestAnimationFrame(() => {
+    const funnelCanvas = document.getElementById('funnelCanvas');
+    const sparkCanvas = document.getElementById('sparklineCanvas');
+    const funnelWrap = document.getElementById('funnelWrap');
+
+    if (funnelCanvas && funnelWrap) {
+      const drawFunnel = () => {
+        const w = funnelWrap.clientWidth - 40; // account for padding
+        funnelCanvas.width = Math.max(w, 300);
+        drawFunnelChart(funnelCanvas, steps, stepStats, totalViews);
+      };
+
+      drawFunnel();
+
+      const ro = new ResizeObserver(drawFunnel);
+      ro.observe(funnelWrap);
+      funnelResizeObservers.push(ro);
+    }
+
+    if (sparkCanvas) {
+      const sparkWrap = sparkCanvas.parentElement;
+      const drawSpark = () => {
+        sparkCanvas.width = Math.max(sparkWrap.clientWidth - 40, 200);
+        drawSparkline(sparkCanvas, sparklineData, '#6366f1');
+      };
+      drawSpark();
+      const ro2 = new ResizeObserver(drawSpark);
+      ro2.observe(sparkWrap);
+      funnelResizeObservers.push(ro2);
+    }
+  });
+}
+
+// ==================== EMPTY STATE (no demos) ====================
+function renderEmptyMain() {
+  const detail = document.getElementById('demoDetail');
+  detail.innerHTML = `
+    <div class="empty-state" style="flex:1;min-height:400px;">
+      <div class="empty-state-icon">📊</div>
+      <h3>还没有数据</h3>
+      <p>创建并分享演示后，数据将显示在这里</p>
+      <a href="creator.html" class="empty-create-btn">创建演示 →</a>
+    </div>`;
+}
+
+// ==================== INIT ====================
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+async function init() {
+  allDemos = await DemoDB.getAll();
+
+  renderOverviewCards(allDemos);
+
+  if (!allDemos.length) {
+    document.getElementById('sidebarList').innerHTML =
+      `<div style="padding:20px;text-align:center;color:var(--gray-400);font-size:0.82rem;">暂无演示</div>`;
+    // Zero out stats
+    ['statTotal','statViews','statCompletions','statAvgRate'].forEach(id => {
+      document.getElementById(id).textContent = id === 'statAvgRate' ? '0%' : '0';
+    });
+    renderEmptyMain();
+    return;
+  }
+
+  // Select first demo that has views; otherwise just first
+  const firstWithData = allDemos.find(d => (d.analytics?.views || 0) > 0) || allDemos[0];
+  selectedDemoId = firstWithData.id;
+
+  renderSidebar(allDemos);
+  renderDemoDetail(firstWithData);
+}
+
+init();
+</script>
+</body>
+</html>

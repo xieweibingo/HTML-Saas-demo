@@ -591,6 +591,21 @@ body { display: flex; flex-direction: column; background: var(--gray-50); }
             <span style="font-size:0.82rem;color:var(--gray-700)">显示"由演示Demo创建"</span>
           </div>
         </div>
+        <div class="props-section">
+          <div class="props-section-title">🤖 AI 设置</div>
+          <div class="props-field">
+            <label>Claude API Key</label>
+            <input type="password" class="input" id="claudeKeyInput" placeholder="sk-ant-..." autocomplete="off">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;">
+            <span id="claudeKeyStatus" style="font-size:0.75rem;font-weight:600;"></span>
+            <button class="btn btn-sm btn-primary" id="saveClaudeKeyBtn">保存</button>
+          </div>
+          <p style="font-size:0.72rem;color:var(--gray-400);margin-top:6px;line-height:1.5;">
+            填入后，AI 标注/旁白/翻译功能将调用真实 Claude API。<br>
+            Key 存储于浏览器本地，不会上传至任何服务器。
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -677,6 +692,8 @@ body { display: flex; flex-direction: column; background: var(--gray-50); }
 <div id="toast-container"></div>
 
 <script src="js/db.js"></script>
+<script src="js/claude-api.js"></script>
+<script src="js/api-client.js"></script>
 <script>
 // ===================== STATE =====================
 const state = {
@@ -1555,64 +1572,130 @@ $('aiAutoAnnotate').addEventListener('click', async () => {
   if (state.currentStepIdx < 0) { showToast('请先选择一个步骤', 'warning'); return; }
   const step = state.demo.steps[state.currentStepIdx];
   const tone = document.querySelector('input[name="aiTone"]:checked')?.value || 'conversational';
-  showToast('AI 正在生成标注...', 'default');
 
-  // Simulate AI: add smart annotations at predefined positions
   const positions = [
     { x: 20, y: 25 }, { x: 70, y: 40 }, { x: 45, y: 65 },
   ];
-  const generated = positions.slice(0, Math.min(3, 3 - step.annotations.length + 1));
-  generated.forEach((pos, i) => {
-    const ann = createAnnotation('hotspot', pos.x, pos.y, {
-      title: AIAnnotator.generateStepText(step.title || `步骤 ${state.currentStepIdx + 1}`, '', tone),
-      description: i === 0 ? '这是核心功能区域，点击继续了解' : '点击下方按钮前往下一步',
-      color: state.demo.branding.primaryColor,
+  const slots = positions.slice(0, Math.min(3, 3 - step.annotations.length + 1));
+
+  if (ClaudeAPI.hasKey()) {
+    showToast('AI 正在生成标注（调用 Claude API）...', 'default');
+    try {
+      for (let i = 0; i < slots.length; i++) {
+        const pos = slots[i];
+        const result = await ClaudeAPI.generateAnnotation(step.title || `步骤 ${state.currentStepIdx + 1}`, tone);
+        const ann = createAnnotation('hotspot', pos.x, pos.y, {
+          title: result.title || step.title,
+          description: result.description || '点击下方按钮前往下一步',
+          color: state.demo.branding.primaryColor,
+        });
+        step.annotations.push(ann);
+      }
+      renderAnnotations();
+      renderStepsList();
+      markDirty();
+      autoSave();
+      pushHistory();
+      showToast(`Claude AI 已生成 ${slots.length} 个标注`, 'success');
+    } catch (e) {
+      showToast('Claude API 调用失败：' + e.message, 'error');
+    }
+  } else {
+    showToast('AI 正在生成标注...', 'default');
+    slots.forEach((pos, i) => {
+      const ann = createAnnotation('hotspot', pos.x, pos.y, {
+        title: AIAnnotator.generateStepText(step.title || `步骤 ${state.currentStepIdx + 1}`, '', tone),
+        description: i === 0 ? '这是核心功能区域，点击继续了解' : '点击下方按钮前往下一步',
+        color: state.demo.branding.primaryColor,
+      });
+      step.annotations.push(ann);
     });
-    step.annotations.push(ann);
-  });
-  renderAnnotations();
-  renderStepsList();
-  markDirty();
-  autoSave();
-  pushHistory();
-  showToast(`AI 已生成 ${generated.length} 个标注`, 'success');
+    renderAnnotations();
+    renderStepsList();
+    markDirty();
+    autoSave();
+    pushHistory();
+    showToast(`AI 已生成 ${slots.length} 个标注`, 'success');
+  }
 });
 
-$('aiGenerateVoice').addEventListener('click', () => {
+$('aiGenerateVoice').addEventListener('click', async () => {
   if (state.currentStepIdx < 0) { showToast('请先选择一个步骤', 'warning'); return; }
   const step = state.demo.steps[state.currentStepIdx];
-  const text = AIAnnotator.generateVoiceoverText(step);
-  step.voiceover.text = text;
-  step.voiceover.enabled = true;
-  $('voiceText').value = text;
-  $('voiceEnabled').checked = true;
-  $('voiceoverControls').style.display = 'block';
-  switchPropsTab('step');
-  markDirty();
-  autoSave();
-  showToast('AI 已生成语音文案', 'success');
+  const tone = document.querySelector('input[name="aiTone"]:checked')?.value || 'conversational';
+
+  if (ClaudeAPI.hasKey()) {
+    showToast('Claude AI 正在生成旁白文案...', 'default');
+    try {
+      const text = await ClaudeAPI.generateVoiceover(step.title, step.annotations, tone);
+      step.voiceover.text = text;
+      step.voiceover.enabled = true;
+      $('voiceText').value = text;
+      $('voiceEnabled').checked = true;
+      $('voiceoverControls').style.display = 'block';
+      switchPropsTab('step');
+      markDirty();
+      autoSave();
+      showToast('Claude AI 已生成语音文案', 'success');
+    } catch (e) {
+      showToast('Claude API 调用失败：' + e.message, 'error');
+    }
+  } else {
+    const text = AIAnnotator.generateVoiceoverText(step);
+    step.voiceover.text = text;
+    step.voiceover.enabled = true;
+    $('voiceText').value = text;
+    $('voiceEnabled').checked = true;
+    $('voiceoverControls').style.display = 'block';
+    switchPropsTab('step');
+    markDirty();
+    autoSave();
+    showToast('AI 已生成语音文案', 'success');
+  }
 });
 
-$('aiTranslate').addEventListener('click', () => {
+$('aiTranslate').addEventListener('click', async () => {
   if (state.currentStepIdx < 0) { showToast('请先选择一个步骤', 'warning'); return; }
   const step = state.demo.steps[state.currentStepIdx];
-  // Simulate translation (in real product would call translation API)
-  const translateMap = {
-    '点击查看': 'Click to view',
-    '在这里添加说明文字': 'Add description here',
-    '注意这里': 'Note here',
-    '下一步': 'Next',
-    '聚焦区域': 'Spotlight area',
-    '关注这个区域的内容': 'Focus on this area',
-  };
-  step.annotations.forEach(ann => {
-    ann.title = translateMap[ann.title] || ann.title;
-    ann.description = translateMap[ann.description] || ann.description;
-  });
-  renderAnnotations();
-  markDirty();
-  autoSave();
-  showToast('已翻译为英文（模拟）', 'success');
+
+  if (ClaudeAPI.hasKey()) {
+    if (!step.annotations.length) { showToast('当前步骤没有标注可翻译', 'warning'); return; }
+    showToast('Claude AI 正在翻译标注...', 'default');
+    try {
+      const payload = step.annotations.map(a => ({ id: a.id, title: a.title, description: a.description }));
+      const translated = await ClaudeAPI.translate(payload, 'en');
+      translated.forEach(t => {
+        const ann = step.annotations.find(a => a.id === t.id);
+        if (ann) {
+          ann.title = t.title || ann.title;
+          ann.description = t.description || ann.description;
+        }
+      });
+      renderAnnotations();
+      markDirty();
+      autoSave();
+      showToast('Claude AI 已翻译为英文', 'success');
+    } catch (e) {
+      showToast('Claude API 调用失败：' + e.message, 'error');
+    }
+  } else {
+    const translateMap = {
+      '点击查看': 'Click to view',
+      '在这里添加说明文字': 'Add description here',
+      '注意这里': 'Note here',
+      '下一步': 'Next',
+      '聚焦区域': 'Spotlight area',
+      '关注这个区域的内容': 'Focus on this area',
+    };
+    step.annotations.forEach(ann => {
+      ann.title = translateMap[ann.title] || ann.title;
+      ann.description = translateMap[ann.description] || ann.description;
+    });
+    renderAnnotations();
+    markDirty();
+    autoSave();
+    showToast('已翻译为英文（模拟）', 'success');
+  }
 });
 
 $('aiRedact').addEventListener('click', () => {
@@ -1624,11 +1707,16 @@ $('publishBtn').addEventListener('click', async () => {
   await autoSave();
   state.demo.isPublished = true;
   await DemoDB.save(state.demo);
-  const url = `${location.origin}/player.html?id=${state.demo.id}`;
+  // Try backend public share URL first, fallback to local URL
+  let url;
+  try {
+    url = await DemoAPIClient.getPublicUrl(state.demo);
+  } catch {
+    url = `${location.origin}/player.html?id=${state.demo.id}`;
+  }
   $('shareUrl').textContent = url;
   $('embedCode').textContent = `<iframe src="${url}" width="100%" height="600" frameborder="0" allowfullscreen></iframe>`;
   openModal('publishModal');
-  // Default to share tab
   switchModalTab('share');
 });
 
@@ -1825,6 +1913,40 @@ function escHtml(s) {
   d.textContent = s || '';
   return d.innerHTML;
 }
+
+// ===================== CLAUDE API KEY UI =====================
+function updateClaudeKeyStatus() {
+  const statusEl = $('claudeKeyStatus');
+  if (!statusEl) return;
+  if (ClaudeAPI.hasKey()) {
+    statusEl.textContent = '已配置 ✓';
+    statusEl.style.color = 'var(--success)';
+  } else {
+    statusEl.textContent = '未配置';
+    statusEl.style.color = 'var(--gray-400)';
+  }
+}
+
+// Initialize key input & status when Demo tab is shown
+document.querySelectorAll('.tabs .tab[data-panel]').forEach(t => {
+  if (t.dataset.panel === 'demo') {
+    t.addEventListener('click', () => {
+      const keyInput = $('claudeKeyInput');
+      if (keyInput && ClaudeAPI.hasKey()) keyInput.placeholder = '••••••••••••••••';
+      updateClaudeKeyStatus();
+    });
+  }
+});
+
+$('saveClaudeKeyBtn')?.addEventListener('click', () => {
+  const val = $('claudeKeyInput').value.trim();
+  if (!val) { showToast('请输入 API Key', 'warning'); return; }
+  ClaudeAPI.setKey(val);
+  $('claudeKeyInput').value = '';
+  $('claudeKeyInput').placeholder = '••••••••••••••••';
+  updateClaudeKeyStatus();
+  showToast('Claude API Key 已保存', 'success');
+});
 
 // Start
 init();
