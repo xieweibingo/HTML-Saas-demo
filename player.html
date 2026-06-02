@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>演示播放器 — 演示Demo</title>
+<link rel="stylesheet" href="css/main.css">
+<style>
+html, body { height: 100%; overflow: hidden; background: #0f172a; }
+body { display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+
+/* ====== Loading Screen ====== */
+.loading-screen {
+  position: fixed; inset: 0;
+  background: #0f172a;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px; z-index: 9999;
+  transition: opacity 0.4s;
+}
+.loading-logo {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 1.5rem; font-weight: 900;
+  animation: logo-pulse 1.5s ease-in-out infinite;
+}
+@keyframes logo-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+.loading-text { color: rgba(255,255,255,0.5); font-size: 0.875rem; }
+.loading-dots span {
+  display: inline-block; width: 6px; height: 6px;
+  background: #6366f1; border-radius: 50%; margin: 0 2px;
+  animation: dot-bounce 1.2s infinite;
+}
+.loading-dots span:nth-child(2){animation-delay:.15s}
+.loading-dots span:nth-child(3){animation-delay:.3s}
+@keyframes dot-bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-8px)}}
+
+/* ====== Player Wrapper ====== */
+.player-wrap {
+  width: 100%; max-width: 960px;
+  display: flex; flex-direction: column;
+  padding: 20px;
+  height: 100vh; max-height: 100vh;
+  justify-content: center;
+}
+
+/* ====== Player Card ====== */
+.player-card {
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+  display: flex; flex-direction: column;
+  max-height: calc(100vh - 40px);
+}
+
+/* ====== Top Nav ====== */
+.player-topnav {
+  padding: 0 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 52px; flex-shrink: 0;
+  background: var(--brand-color, #6366f1);
+  color: #fff;
+}
+.player-topnav-left { display: flex; align-items: center; gap: 12px; }
+.player-demo-title { font-weight: 700; font-size: 0.9rem; }
+.player-step-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 2px 10px; border-radius: 100px;
+  font-size: 0.75rem; font-weight: 600;
+}
+.player-topnav-right { display: flex; align-items: center; gap: 10px; }
+.player-fullscreen-btn {
+  background: rgba(255,255,255,0.15);
+  border: none; color: #fff;
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 0.85rem;
+  transition: background 0.15s;
+}
+.player-fullscreen-btn:hover { background: rgba(255,255,255,0.25); }
+
+/* Progress steps dots */
+.player-progress-dots {
+  display: flex; align-items: center; gap: 4px;
+  flex: 1; justify-content: center;
+}
+.progress-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  cursor: pointer; transition: all 0.2s;
+}
+.progress-dot.active {
+  width: 20px; border-radius: 3px;
+  background: #fff;
+}
+.progress-dot.done { background: rgba(255,255,255,0.7); }
+
+/* ====== Progress Bar ====== */
+.player-progress-bar {
+  height: 3px;
+  background: rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+.player-progress-fill {
+  height: 100%;
+  background: var(--brand-color, #6366f1);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ====== Canvas ====== */
+.player-canvas {
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+  background: #f8fafc;
+}
+.player-canvas-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 200px);
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+.player-annotations { position: absolute; inset: 0; pointer-events: none; }
+.player-annotations > * { pointer-events: all; }
+
+/* Canvas click advance overlay (for non-annotated areas) */
+.canvas-click-zone {
+  position: absolute; inset: 0;
+  cursor: pointer; z-index: 1;
+}
+
+/* ====== Controls ====== */
+.player-controls {
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border-top: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+.ctrl-btn {
+  padding: 9px 20px; border-radius: 10px;
+  font-size: 0.875rem; font-weight: 600;
+  cursor: pointer; border: none; transition: all 0.18s;
+  display: flex; align-items: center; gap: 6px;
+}
+.ctrl-prev {
+  background: #f1f5f9; color: #475569;
+}
+.ctrl-prev:hover { background: #e2e8f0; }
+.ctrl-prev:disabled { opacity: 0.35; cursor: not-allowed; }
+.ctrl-next {
+  background: var(--brand-color, #6366f1); color: #fff;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.35); margin-left: auto;
+}
+.ctrl-next:hover { opacity: 0.88; transform: translateX(2px); }
+.ctrl-step-info {
+  font-size: 0.82rem; color: #94a3b8;
+  font-weight: 500; white-space: nowrap;
+}
+
+/* Voiceover control */
+.ctrl-voice-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #f1f5f9; border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #64748b; font-size: 0.9rem;
+  transition: all 0.18s;
+}
+.ctrl-voice-btn:hover { background: #e2e8f0; }
+.ctrl-voice-btn.speaking {
+  background: var(--brand-color, #6366f1); color: #fff;
+  animation: voice-pulse 1s ease-in-out infinite;
+}
+@keyframes voice-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0.4)} 50%{box-shadow:0 0 0 8px rgba(99,102,241,0)} }
+
+/* ====== Branding Footer ====== */
+.player-branding {
+  padding: 6px 20px;
+  text-align: right;
+  font-size: 0.7rem; color: #94a3b8;
+  background: #fff; border-top: 1px solid #f8fafc;
+  flex-shrink: 0;
+}
+.player-branding a { color: var(--brand-color, #6366f1); font-weight: 500; }
+
+/* ====== Chapter Overlay ====== */
+.chapter-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, rgba(99,102,241,0.94), rgba(139,92,246,0.94));
+  z-index: 25; cursor: pointer;
+  animation: chapter-in 0.4s ease;
+}
+@keyframes chapter-in { from{opacity:0;transform:scale(0.98)} to{opacity:1;transform:scale(1)} }
+.chapter-inner { text-align: center; color: #fff; padding: 40px; max-width: 520px; }
+.chapter-num-badge {
+  display: inline-block; margin-bottom: 14px;
+  background: rgba(255,255,255,0.2); border-radius: 100px;
+  padding: 4px 18px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em;
+}
+.chapter-title { font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; line-height: 1.2; }
+.chapter-desc { opacity: 0.88; font-size: 1rem; line-height: 1.6; margin-bottom: 24px; }
+.chapter-start-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.95); color: #6366f1;
+  padding: 12px 28px; border-radius: 12px; border: none;
+  font-size: 0.9rem; font-weight: 700; cursor: pointer;
+  transition: all 0.18s;
+}
+.chapter-start-btn:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+
+/* ====== Annotation Styles (Player-specific overrides) ====== */
+.ann-hotspot { position: absolute; transform: translate(-50%,-50%); cursor: pointer; z-index: 20; }
+.hotspot-dot {
+  background: var(--ann-color, #6366f1);
+  border-radius: 50%; border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  position: relative; z-index: 2;
+  transition: transform 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.ann-hotspot:hover .hotspot-dot { transform: scale(1.15); }
+.hotspot-ring, .hotspot-ring2 {
+  position: absolute; inset: -6px;
+  border: 2.5px solid var(--ann-color, #6366f1);
+  border-radius: 50%;
+  animation: hp-pulse 2s ease-out infinite;
+  pointer-events: none;
+}
+.hotspot-ring2 { inset: -12px; border-width: 1.5px; animation-delay: 0.5s; }
+@keyframes hp-pulse { 0%{transform:scale(.8);opacity:.9} 100%{transform:scale(2);opacity:0} }
+
+.ann-popup {
+  position: absolute; min-width: 230px; max-width: 300px;
+  background: #fff; border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.05);
+  z-index: 30; display: none;
+  animation: popup-in 0.18s ease;
+}
+.ann-popup.visible { display: block; }
+@keyframes popup-in { from{opacity:0;transform:scale(0.96)translateY(4px)} to{opacity:1;transform:scale(1)translateY(0)} }
+.popup-header { padding: 14px 16px 10px; border-bottom: 1px solid #f1f5f9; }
+.popup-title { font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+.popup-desc { font-size: 0.82rem; color: #64748b; line-height: 1.55; }
+.popup-footer { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.popup-step { font-size: 0.75rem; color: #94a3b8; }
+.popup-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 8px;
+  background: var(--ann-color, #6366f1); color: #fff;
+  font-size: 0.82rem; font-weight: 600; cursor: pointer; border: none;
+}
+.popup-btn:hover { opacity: 0.88; }
+/* Popup arrow directions */
+.ann-popup.pop-bottom { top: calc(100% + 14px); left: 50%; transform: translateX(-50%); }
+.ann-popup.pop-bottom::before { top: -6px; left: calc(50% - 6px); }
+.ann-popup.pop-top { bottom: calc(100% + 14px); left: 50%; transform: translateX(-50%); }
+.ann-popup.pop-top::before { bottom: -6px; left: calc(50% - 6px); box-shadow: 1px 1px 2px rgba(0,0,0,0.04); }
+.ann-popup.pop-right { left: calc(100% + 14px); top: 50%; transform: translateY(-50%); }
+.ann-popup.pop-right::before { left: -6px; top: calc(50% - 6px); box-shadow: -1px 1px 2px rgba(0,0,0,0.04); }
+.ann-popup.pop-left { right: calc(100% + 14px); top: 50%; transform: translateY(-50%); }
+.ann-popup.pop-left::before { right: -6px; top: calc(50% - 6px); box-shadow: 1px -1px 2px rgba(0,0,0,0.04); }
+.ann-popup::before { content:''; position:absolute; width:12px; height:12px; background:#fff; transform:rotate(45deg); box-shadow:-1px -1px 2px rgba(0,0,0,0.04); }
+
+.ann-callout { position: absolute; z-index: 20; }
+.ann-spotlight {
+  position: absolute; border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.62);
+  border: 2px solid rgba(255,255,255,0.4);
+  z-index: 15; pointer-events: none;
+}
+.ann-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.62); z-index: 14; pointer-events: none; }
+.ann-backdrop-cutout {
+  position: absolute; border-radius: 6px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.62);
+  border: 2px solid rgba(255,255,255,0.3);
+  z-index: 16; pointer-events: none;
+}
+.ann-rect {
+  position: absolute; border-radius: 6px;
+  border: 2.5px solid var(--ann-color, #6366f1);
+  background: rgba(99,102,241,0.08);
+  z-index: 18; pointer-events: none;
+}
+.rect-label {
+  position: absolute; top: -22px; left: 0;
+  background: var(--ann-color, #6366f1); color: #fff;
+  font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+}
+.ann-text {
+  position: absolute; z-index: 21;
+  background: var(--ann-color, #6366f1); color: #fff;
+  padding: 6px 12px; border-radius: 8px;
+  font-size: 0.82rem; font-weight: 600; max-width: 200px;
+  pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* ====== CTA End Screen ====== */
+.end-screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+  z-index: 30; text-align: center; padding: 40px;
+  animation: end-in 0.4s ease;
+}
+@keyframes end-in { from{opacity:0} to{opacity:1} }
+.end-checkmark {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem; margin: 0 auto 16px;
+  box-shadow: 0 8px 24px rgba(99,102,241,0.35);
+}
+.end-title { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+.end-desc { font-size: 0.9rem; color: #64748b; margin-bottom: 24px; }
+.end-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.end-cta-btn {
+  padding: 12px 28px; border-radius: 12px;
+  font-size: 0.9rem; font-weight: 700; cursor: pointer; border: none;
+  background: var(--brand-color, #6366f1); color: #fff;
+  box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+  transition: all 0.18s;
+}
+.end-cta-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.end-restart-btn {
+  padding: 12px 24px; border-radius: 12px;
+  font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  border: 1.5px solid #e2e8f0; background: #fff; color: #475569;
+  transition: all 0.18s;
+}
+.end-restart-btn:hover { background: #f8fafc; }
+
+/* ====== Fullscreen ====== */
+:fullscreen .player-wrap { padding: 0; max-width: 100%; }
+:fullscreen .player-card { border-radius: 0; max-height: 100vh; }
+:fullscreen body { background: #000; }
+
+/* ====== Keyboard hints ====== */
+.keyboard-hint {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.7);
+  padding: 6px 14px; border-radius: 100px;
+  font-size: 0.72rem; display: flex; align-items: center; gap: 8px;
+  backdrop-filter: blur(8px); transition: opacity 0.4s;
+  pointer-events: none;
+}
+.key-badge {
+  background: rgba(255,255,255,0.15); border-radius: 4px;
+  padding: 1px 6px; font-size: 0.7rem;
+}
+.keyboard-hint.hidden { opacity: 0; }
+
+/* ====== Preview banner ====== */
+.preview-banner {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+  color: #fff; padding: 8px 20px;
+  font-size: 0.8rem; font-weight: 600; text-align: center;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.preview-banner a {
+  background: rgba(255,255,255,0.2); padding: 4px 12px;
+  border-radius: 100px; font-size: 0.78rem;
+  color: #fff; text-decoration: none; transition: background 0.15s;
+}
+.preview-banner a:hover { background: rgba(255,255,255,0.3); }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .player-wrap { padding: 0; }
+  .player-card { border-radius: 0; max-height: 100vh; }
+  .player-progress-dots { display: none; }
+  .ctrl-step-info { display: none; }
+  body { background: #fff; }
+}
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-logo">W</div>
+  <div class="loading-text">加载演示中...</div>
+  <div class="loading-dots"><span></span><span></span><span></span></div>
+</div>
+
+<!-- Player Wrapper -->
+<div class="player-wrap" id="playerWrap" style="display:none">
+  <!-- Preview Banner (shown only in preview mode) -->
+  <div class="preview-banner hidden" id="previewBanner">
+    ⚠ 预览模式 — 此演示尚未正式发布
+    <a id="editBackBtn" href="#">← 返回编辑</a>
+  </div>
+
+  <!-- Player Card -->
+  <div class="player-card" id="playerCard">
+    <!-- Top Nav -->
+    <div class="player-topnav" id="playerTopnav">
+      <div class="player-topnav-left">
+        <span class="player-demo-title" id="demoTitle">演示</span>
+        <span class="player-step-badge" id="stepBadge">1 / 1</span>
+      </div>
+      <div class="player-progress-dots" id="progressDots"></div>
+      <div class="player-topnav-right">
+        <button class="player-fullscreen-btn" id="fullscreenBtn" title="全屏">⛶</button>
+      </div>
+    </div>
+    <!-- Progress bar -->
+    <div class="player-progress-bar">
+      <div class="player-progress-fill" id="progressFill"></div>
+    </div>
+    <!-- Canvas -->
+    <div class="player-canvas" id="playerCanvas">
+      <img class="player-canvas-img" id="canvasImg" alt="演示截图">
+      <div class="player-annotations" id="annotationsLayer"></div>
+      <div class="canvas-click-zone" id="canvasClickZone"></div>
+    </div>
+    <!-- Controls -->
+    <div class="player-controls" id="playerControls">
+      <button class="ctrl-btn ctrl-prev" id="prevBtn" disabled>← 上一步</button>
+      <span class="ctrl-step-info" id="stepInfo">步骤 1 / 1</span>
+      <button class="ctrl-voice-btn hidden" id="voiceBtn" title="播放旁白">🔊</button>
+      <button class="ctrl-btn ctrl-next" id="nextBtn">下一步 →</button>
+    </div>
+    <!-- Branding -->
+    <div class="player-branding hidden" id="playerBranding">
+      由 <a href="index.html" target="_blank">演示Demo</a> 创建
+    </div>
+  </div>
+</div>
+
+<!-- Error State -->
+<div id="errorState" style="display:none;text-align:center;color:rgba(255,255,255,0.6);padding:40px">
+  <div style="font-size:3rem;margin-bottom:16px">😕</div>
+  <h2 style="color:#fff;margin-bottom:8px">演示不存在</h2>
+  <p>该演示链接可能已失效，或尚未创建</p>
+  <a href="app.html" style="display:inline-block;margin-top:20px;padding:10px 24px;background:#6366f1;color:#fff;border-radius:10px;font-weight:600">返回主页</a>
+</div>
+
+<!-- Keyboard Hint -->
+<div class="keyboard-hint" id="keyboardHint">
+  <span class="key-badge">←</span><span>上一步</span>
+  <span style="opacity:0.4">|</span>
+  <span>下一步</span><span class="key-badge">→</span>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="js/db.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const demoId = params.get('id');
+const isPreview = params.get('preview') === '1';
+const sampleDemo = params.get('demo') === 'sample';
+
+let demo = null;
+let currentStep = 0;
+let openPopupEl = null;
+let speakingUtterance = null;
+
+// ===================== INIT =====================
+async function init() {
+  try {
+    if (sampleDemo) {
+      demo = buildSampleDemo();
+    } else if (demoId) {
+      demo = await DemoDB.get(demoId);
+      if (demo) DemoDB.recordView(demoId);
+    }
+
+    if (!demo || !demo.steps || demo.steps.length === 0) {
+      showError();
+      return;
+    }
+
+    // Apply branding CSS variable
+    const color = demo.branding?.primaryColor || '#6366f1';
+    document.documentElement.style.setProperty('--brand-color', color);
+    document.querySelectorAll('.ctrl-next').forEach(el => el.style.background = color);
+
+    $('demoTitle').textContent = demo.title || '演示';
+    $('prevBtn').textContent = `← ${demo.branding?.prevButtonText || '上一步'}`;
+
+    if (isPreview) {
+      $('previewBanner').classList.remove('hidden');
+      $('editBackBtn').href = `creator.html?id=${demo.id}`;
+    }
+
+    if (demo.branding?.showBranding !== false) {
+      $('playerBranding').classList.remove('hidden');
+    }
+
+    buildProgressDots();
+    $('playerWrap').style.display = '';
+    showStep(0);
+
+    setTimeout(() => {
+      $('loadingScreen').style.opacity = '0';
+      setTimeout(() => $('loadingScreen').style.display = 'none', 400);
+    }, 600);
+
+    // Hide keyboard hint after 3s
+    setTimeout(() => $('keyboardHint').classList.add('hidden'), 4000);
+
+    TTSEngine.init();
+  } catch (e) {
+    console.error(e);
+    showError();
+  }
+}
+
+function showError() {
+  $('loadingScreen').style.display = 'none';
+  $('errorState').style.display = 'block';
+}
+
+// ===================== PROGRESS DOTS =====================
+function buildProgressDots() {
+  const dots = $('progressDots');
+  dots.innerHTML = '';
+  demo.steps.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'progress-dot';
+    d.addEventListener('click', () => showStep(i));
+    dots.appendChild(d);
+  });
+}
+
+function updateProgressDots(idx) {
+  document.querySelectorAll('.progress-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+    d.classList.toggle('done', i < idx);
+    d.classList.remove('done');
+    if (i < idx) d.classList.add('done');
+  });
+}
+
+// ===================== SHOW STEP =====================
+function showStep(idx) {
+  if (!demo || idx < 0 || idx >= demo.steps.length) return;
+
+  // Hide end screen if showing
+  const existingEnd = $('playerCanvas').querySelector('.end-screen');
+  if (existingEnd) existingEnd.remove();
+
+  currentStep = idx;
+  const step = demo.steps[idx];
+  const total = demo.steps.length;
+
+  // Record view
+  if (demoId) DemoDB.recordStepView(demoId, idx);
+
+  // Update image
+  const img = $('canvasImg');
+  if (step.imageDataUrl) {
+    img.src = step.imageDataUrl;
+    img.style.display = '';
+  } else {
+    img.style.display = 'none';
+  }
+
+  // Close any open popup
+  closeAllPopups();
+
+  // Render annotations
+  renderAnnotations(step);
+
+  // Update UI
+  const color = demo.branding?.primaryColor || '#6366f1';
+  $('stepBadge').textContent = `${idx + 1} / ${total}`;
+  $('stepInfo').textContent = `步骤 ${idx + 1} / ${total}`;
+  $('progressFill').style.width = `${(idx + 1) / total * 100}%`;
+  updateProgressDots(idx);
+
+  $('prevBtn').disabled = idx === 0;
+
+  // Last step
+  const isLast = idx === total - 1;
+  const nextBtn = $('nextBtn');
+  if (isLast) {
+    nextBtn.textContent = demo.branding?.ctaText || '完成 ✓';
+  } else {
+    nextBtn.textContent = `${demo.branding?.nextButtonText || '下一步'} →`;
+  }
+
+  // Voiceover
+  TTSEngine.stop();
+  $('voiceBtn').classList.remove('speaking', 'hidden');
+  if (step.voiceover?.enabled && step.voiceover?.text) {
+    $('voiceBtn').classList.remove('hidden');
+    // Auto-play voiceover
+    setTimeout(() => playVoiceover(step), 400);
+  } else {
+    $('voiceBtn').classList.add('hidden');
+  }
+
+  // If step has chapter annotation, show chapter overlay
+  const chapterAnn = step.annotations?.find(a => a.type === 'chapter');
+  if (chapterAnn) {
+    showChapterOverlay(chapterAnn, idx);
+  }
+}
+
+// ===================== RENDER ANNOTATIONS =====================
+function renderAnnotations(step) {
+  const layer = $('annotationsLayer');
+  layer.innerHTML = '';
+  $('canvasClickZone').style.zIndex = 1; // reset
+
+  if (!step.annotations) return;
+  const color = demo.branding?.primaryColor || '#6366f1';
+  const btnText = demo.branding?.nextButtonText || '下一步';
+
+  // Check for backdrop
+  const backdropAnn = step.annotations.find(a => a.type === 'backdrop');
+  if (backdropAnn) {
+    const bd = document.createElement('div');
+    bd.className = 'ann-backdrop';
+    layer.appendChild(bd);
+  }
+
+  step.annotations.forEach((ann, annIdx) => {
+    if (ann.type === 'chapter') return; // handled separately
+    const el = createAnnotationEl(ann, color, btnText, annIdx);
+    if (el) layer.appendChild(el);
+  });
+}
+
+function createAnnotationEl(ann, color, btnText, annIdx) {
+  const c = ann.color || color;
+
+  if (ann.type === 'hotspot') {
+    const wrap = document.createElement('div');
+    wrap.className = 'ann-hotspot';
+    wrap.style.left = ann.x + '%';
+    wrap.style.top = ann.y + '%';
+    wrap.style.setProperty('--ann-color', c);
+    const sizeMap = { sm: '20px', md: '26px', lg: '34px' };
+    const sz = sizeMap[ann.size] || '26px';
+    wrap.innerHTML = `
+      <div class="hotspot-dot" style="width:${sz};height:${sz}">
+        <div class="hotspot-ring"></div>
+        <div class="hotspot-ring2"></div>
+      </div>
+      <div class="ann-popup pop-${ann.placement || 'bottom'}" id="popup-${ann.id}">
+        <div class="popup-header">
+          <div class="popup-title">${escHtml(ann.title)}</div>
+          ${ann.description ? `<div class="popup-desc">${escHtml(ann.description)}</div>` : ''}
+        </div>
+        <div class="popup-footer">
+          <span class="popup-step">步骤 ${currentStep + 1} / ${demo.steps.length}</span>
+          <button class="popup-btn" style="background:${c}">${escHtml(btnText)} →</button>
+        </div>
+      </div>`;
+    const dot = wrap.querySelector('.hotspot-dot');
+    const popup = wrap.querySelector('.ann-popup');
+    dot.addEventListener('click', e => {
+      e.stopPropagation();
+      closeAllPopups();
+      popup.classList.add('visible');
+      openPopupEl = popup;
+      $('canvasClickZone').style.zIndex = 0; // allow popup interactions
+    });
+    popup.querySelector('.popup-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      handleAction(ann.action);
+    });
+    return wrap;
+  }
+
+  if (ann.type === 'callout') {
+    const wrap = document.createElement('div');
+    wrap.className = 'ann-callout';
+    wrap.style.left = ann.x + '%';
+    wrap.style.top = ann.y + '%';
+    wrap.innerHTML = `
+      <div class="ann-popup pop-${ann.placement || 'bottom'} visible">
+        <div class="popup-header">
+          <div class="popup-title" style="color:${c}">${escHtml(ann.title)}</div>
+          ${ann.description ? `<div class="popup-desc">${escHtml(ann.description)}</div>` : ''}
+        </div>
+        <div class="popup-footer">
+          <span class="popup-step">步骤 ${currentStep + 1} / ${demo.steps.length}</span>
+          <button class="popup-btn" style="background:${c}">${escHtml(btnText)} →</button>
+        </div>
+      </div>`;
+    wrap.querySelector('.popup-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      handleAction(ann.action);
+    });
+    return wrap;
+  }
+
+  if (ann.type === 'spotlight') {
+    const el = document.createElement('div');
+    el.className = 'ann-spotlight';
+    el.style.left = ann.x + '%';
+    el.style.top = ann.y + '%';
+    el.style.width = (ann.width || 20) + '%';
+    el.style.height = (ann.height || 14) + '%';
+    el.style.borderColor = c;
+    return el;
+  }
+
+  if (ann.type === 'backdrop') {
+    const el = document.createElement('div');
+    el.className = 'ann-backdrop-cutout';
+    el.style.left = ann.x + '%';
+    el.style.top = ann.y + '%';
+    el.style.width = (ann.width || 20) + '%';
+    el.style.height = (ann.height || 14) + '%';
+    return el;
+  }
+
+  if (ann.type === 'rectangle') {
+    const el = document.createElement('div');
+    el.className = 'ann-rect';
+    el.style.left = ann.x + '%';
+    el.style.top = ann.y + '%';
+    el.style.width = (ann.width || 20) + '%';
+    el.style.height = (ann.height || 14) + '%';
+    el.style.setProperty('--ann-color', c);
+    el.style.borderColor = c;
+    el.style.background = c + '12';
+    if (ann.title) el.innerHTML = `<div class="rect-label" style="background:${c}">${escHtml(ann.title)}</div>`;
+    return el;
+  }
+
+  if (ann.type === 'text') {
+    const el = document.createElement('div');
+    el.className = 'ann-text';
+    el.style.left = ann.x + '%';
+    el.style.top = ann.y + '%';
+    el.style.background = c;
+    el.style.setProperty('--ann-color', c);
+    el.textContent = ann.title || '文字标注';
+    return el;
+  }
+
+  return null;
+}
+
+function showChapterOverlay(ann, idx) {
+  const color = ann.color || demo.branding?.primaryColor || '#6366f1';
+  const overlay = document.createElement('div');
+  overlay.className = 'chapter-overlay';
+  overlay.innerHTML = `
+    <div class="chapter-inner">
+      <div class="chapter-num-badge">第 ${idx + 1} 章</div>
+      <div class="chapter-title">${escHtml(ann.title)}</div>
+      ${ann.description ? `<div class="chapter-desc">${escHtml(ann.description)}</div>` : ''}
+      <button class="chapter-start-btn" style="color:${color}">继续 →</button>
+    </div>`;
+  overlay.querySelector('.chapter-start-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    overlay.style.animation = 'chapter-out 0.3s ease forwards';
+    setTimeout(() => overlay.remove(), 300);
+  });
+  overlay.addEventListener('click', () => {
+    overlay.remove();
+  });
+  $('playerCanvas').appendChild(overlay);
+}
+
+// ===================== ACTION HANDLING =====================
+function handleAction(action) {
+  if (!action || action.type === 'next' || !action.type) {
+    advanceStep();
+  } else if (action.type === 'goto' && action.target !== null) {
+    showStep(parseInt(action.target));
+  } else if (action.type === 'url' && action.target) {
+    window.open(action.target, '_blank');
+  } else {
+    advanceStep();
+  }
+}
+
+function advanceStep() {
+  closeAllPopups();
+  if (currentStep >= demo.steps.length - 1) {
+    showEndScreen();
+  } else {
+    showStep(currentStep + 1);
+  }
+}
+
+function showEndScreen() {
+  TTSEngine.stop();
+  const color = demo.branding?.primaryColor || '#6366f1';
+  const canvas = $('playerCanvas');
+  const end = document.createElement('div');
+  end.className = 'end-screen';
+  end.innerHTML = `
+    <div class="end-checkmark" style="background:linear-gradient(135deg,${color},${color}cc)">✓</div>
+    <div class="end-title">演示完成！</div>
+    <div class="end-desc">${demo.branding?.ctaText ? '希望这个演示对您有帮助' : '感谢您观看此演示'}</div>
+    <div class="end-actions">
+      ${demo.branding?.ctaUrl ? `<button class="end-cta-btn" style="background:${color}" onclick="window.open('${demo.branding.ctaUrl}','_blank')">${escHtml(demo.branding.ctaText || '立即体验')} →</button>` : ''}
+      <button class="end-restart-btn" onclick="showStep(0)">↺ 重新观看</button>
+    </div>`;
+  canvas.appendChild(end);
+  $('nextBtn').textContent = '重新观看 ↺';
+  $('nextBtn').onclick = () => showStep(0);
+}
+
+function closeAllPopups() {
+  document.querySelectorAll('.ann-popup.visible').forEach(p => p.classList.remove('visible'));
+  openPopupEl = null;
+}
+
+// Click on canvas background → close popup or advance
+$('canvasClickZone').addEventListener('click', () => {
+  if (openPopupEl) {
+    closeAllPopups();
+  } else {
+    // Only auto-advance if no callout annotations (callout requires explicit button click)
+    const step = demo.steps[currentStep];
+    const hasCallout = step?.annotations?.some(a => a.type === 'callout');
+    const hasHotspot = step?.annotations?.some(a => ['hotspot'].includes(a.type));
+    if (!hasCallout && !hasHotspot) advanceStep();
+  }
+});
+
+// ===================== NAVIGATION =====================
+$('prevBtn').addEventListener('click', () => {
+  closeAllPopups();
+  TTSEngine.stop();
+  if (currentStep > 0) showStep(currentStep - 1);
+});
+$('nextBtn').addEventListener('click', () => {
+  closeAllPopups();
+  TTSEngine.stop();
+  if (currentStep >= demo.steps.length - 1) {
+    if (demo.branding?.ctaUrl) window.open(demo.branding.ctaUrl, '_blank');
+    else showEndScreen();
+  } else {
+    showStep(currentStep + 1);
+  }
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    e.preventDefault();
+    advanceStep();
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (currentStep > 0) showStep(currentStep - 1);
+  } else if (e.key === 'Escape') {
+    closeAllPopups();
+  }
+});
+
+// Touch/swipe support
+let touchStartX = 0;
+$('playerCanvas').addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+$('playerCanvas').addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 60) {
+    if (dx < 0) advanceStep();
+    else if (currentStep > 0) showStep(currentStep - 1);
+  }
+}, { passive: true });
+
+// Fullscreen
+$('fullscreenBtn').addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.();
+    $('fullscreenBtn').textContent = '✕';
+  } else {
+    document.exitFullscreen?.();
+    $('fullscreenBtn').textContent = '⛶';
+  }
+});
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) $('fullscreenBtn').textContent = '⛶';
+});
+
+// Voiceover button
+$('voiceBtn').addEventListener('click', () => {
+  const step = demo.steps[currentStep];
+  if ($('voiceBtn').classList.contains('speaking')) {
+    TTSEngine.stop();
+    $('voiceBtn').classList.remove('speaking');
+    $('voiceBtn').textContent = '🔊';
+  } else {
+    playVoiceover(step);
+  }
+});
+
+function playVoiceover(step) {
+  if (!step.voiceover?.text) return;
+  $('voiceBtn').classList.add('speaking');
+  $('voiceBtn').textContent = '⏸';
+  TTSEngine.speak(step.voiceover.text, {
+    lang: step.voiceover.voice || 'zh-CN',
+    onEnd: () => {
+      $('voiceBtn').classList.remove('speaking');
+      $('voiceBtn').textContent = '🔊';
+    }
+  });
+}
+
+// ===================== SAMPLE DEMO =====================
+function buildSampleDemo() {
+  const color = '#6366f1';
+  const steps = [
+    {
+      id: 's1', title: '欢迎使用演示Demo',
+      imageDataUrl: buildPlaceholderImage('#f8fafc', '欢迎来到演示Demo\n\n这是一个示例演示，\n展示了交互式走查工具的核心功能', color),
+      annotations: [
+        { id: 'a1', type: 'callout', x: 50, y: 45, title: '👋 欢迎！', description: '这是一个演示示例，展示了演示Demo的标注功能。', placement: 'bottom', color, action: { type: 'next' } }
+      ],
+      voiceover: { enabled: true, text: '欢迎使用演示Demo，这是一款专业的产品演示工具。', voice: 'zh-CN' }
+    },
+    {
+      id: 's2', title: '脉冲热点标注',
+      imageDataUrl: buildPlaceholderImage('#fff', '产品功能页面截图区域\n\n← 点击左侧的脉冲热点', color),
+      annotations: [
+        { id: 'a2', type: 'hotspot', x: 25, y: 45, title: '核心功能区域', description: '这里是产品最重要的功能入口，点击可以查看详情。', placement: 'right', color, size: 'md', action: { type: 'next' } }
+      ],
+      voiceover: { enabled: false, text: '', voice: 'zh-CN' }
+    },
+    {
+      id: 's3', title: '聚光灯效果',
+      imageDataUrl: buildPlaceholderImage('#f8fafc', '数据面板截图\n\n聚光灯将聚焦于关键数据区域', color),
+      annotations: [
+        { id: 'a3', type: 'spotlight', x: 30, y: 25, width: 40, height: 30, title: '关键数据', description: '', color, action: { type: 'next' } }
+      ],
+      voiceover: { enabled: false, text: '', voice: 'zh-CN' }
+    },
+    {
+      id: 's4', title: '章节卡片',
+      imageDataUrl: buildPlaceholderImage('#fff', '', color),
+      annotations: [
+        { id: 'a4', type: 'chapter', x: 0, y: 0, title: '第二部分', description: '接下来展示更多高级功能', color, action: { type: 'next' } }
+      ],
+      voiceover: { enabled: false, text: '', voice: 'zh-CN' }
+    },
+    {
+      id: 's5', title: '演示结束',
+      imageDataUrl: buildPlaceholderImage('#f0f9ff', '感谢观看\n\n演示Demo 帮助您轻松创建专业产品演示', color),
+      annotations: [
+        { id: 'a5', type: 'callout', x: 50, y: 55, title: '🎉 演示完成！', description: '立即免费注册，创建您自己的专业产品演示。', placement: 'top', color, action: { type: 'url', target: 'app.html' } }
+      ],
+      voiceover: { enabled: false, text: '', voice: 'zh-CN' }
+    }
+  ];
+  return {
+    id: 'sample', title: '示例演示 — 演示Demo 功能展示',
+    branding: {
+      primaryColor: color, nextButtonText: '下一步',
+      prevButtonText: '上一步', ctaText: '免费开始创建',
+      ctaUrl: 'app.html', showBranding: true,
+    },
+    steps,
+    analytics: { views: 0, completions: 0 },
+  };
+}
+
+function buildPlaceholderImage(bg, text, color) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 900; canvas.height = 506;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, 900, 506);
+
+  // Simple UI mockup pattern
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillRect(0, 0, 900, 56); // nav bar
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, 900, 4); // top accent
+
+  // Sidebar
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(0, 56, 220, 450);
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillRect(220, 56, 1, 450);
+
+  // Sidebar items
+  [80,115,150,185].forEach((y, i) => {
+    ctx.fillStyle = i === 0 ? color + '20' : 'transparent';
+    if (i === 0) { ctx.fillRect(8, y-12, 204, 36); ctx.beginPath(); ctx.roundRect(8, y-12, 204, 36, 6); ctx.fill(); }
+    ctx.fillStyle = i === 0 ? color : '#94a3b8';
+    ctx.fillRect(24, y-4, 12, 8);
+    ctx.fillStyle = i === 0 ? '#334155' : '#94a3b8';
+    ctx.fillRect(46, y-5, 80 + Math.random()*40, 10);
+  });
+
+  // Main content
+  if (text) {
+    ctx.fillStyle = '#475569';
+    ctx.font = 'bold 22px PingFang SC, Microsoft YaHei, sans-serif';
+    ctx.textAlign = 'center';
+    const lines = text.split('\n');
+    lines.forEach((line, i) => {
+      ctx.fillStyle = i === 0 ? '#0f172a' : '#94a3b8';
+      ctx.font = i === 0 ? 'bold 22px sans-serif' : '16px sans-serif';
+      ctx.fillText(line, 560, 200 + i * 32);
+    });
+  }
+
+  // Content blocks
+  [[240,80,460,12],[240,100,380,10],[240,122,420,10]].forEach(([x,y,w,h]) => {
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(x, y, w, h);
+  });
+  [260,340,420].forEach(y => {
+    ctx.fillStyle = '#f1f5f9';
+    ctx.fillRect(240, y, 640, 60);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(260, y+12, 120, 10);
+    ctx.fillRect(260, y+32, 200, 8);
+  });
+
+  return canvas.toDataURL('image/jpeg', 0.85);
+}
+
+// ===================== UTILITY =====================
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+// Start
+init();
+</script>
+</body>
+</html>

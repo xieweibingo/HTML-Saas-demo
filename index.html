@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>演示Demo — 几分钟创建专业产品演示，一键分享</title>
+  <meta name="description" content="演示Demo 是 AI 驱动的产品演示工具，上传截图、添加标注、一键分享。深受 3000+ 产品团队信赖。" />
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    /* ===== Page-specific variables ===== */
+    :root {
+      --hero-grad: linear-gradient(135deg, #6366f1 0%, #8b5cf6 60%, #a78bfa 100%);
+      --dark-bg: #0f172a;
+    }
+
+    /* ===== Scroll-reveal base ===== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.62s cubic-bezier(.4,0,.2,1), transform 0.62s cubic-bezier(.4,0,.2,1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.08s; }
+    .reveal-delay-2 { transition-delay: 0.16s; }
+    .reveal-delay-3 { transition-delay: 0.24s; }
+    .reveal-delay-4 { transition-delay: 0.32s; }
+    .reveal-delay-5 { transition-delay: 0.40s; }
+    .reveal-delay-6 { transition-delay: 0.48s; }
+
+    /* ===== Layout helpers ===== */
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 clamp(16px, 4vw, 48px);
+    }
+    section { padding: 96px 0; }
+
+    /* ===== NAV overrides ===== */
+    .lp-nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 64px;
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--gray-100);
+      z-index: 200;
+      display: flex; align-items: center;
+      padding: 0 clamp(16px, 4vw, 48px);
+    }
+    .lp-nav-inner {
+      width: 100%; max-width: 1160px;
+      margin: 0 auto;
+      display: flex; align-items: center; gap: 32px;
+    }
+    .lp-nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 800; font-size: 1.18rem; color: var(--gray-900);
+      letter-spacing: -0.025em; text-decoration: none;
+      flex-shrink: 0;
+    }
+    .lp-logo-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 1rem; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .lp-nav-links {
+      display: flex; gap: 2px; flex: 1;
+    }
+    .lp-nav-link {
+      padding: 7px 14px; border-radius: 8px;
+      font-size: 0.9rem; color: var(--gray-600); font-weight: 500;
+      transition: all 0.18s ease;
+    }
+    .lp-nav-link:hover { background: var(--gray-100); color: var(--gray-900); }
+    .lp-nav-actions {
+      display: flex; align-items: center; gap: 10px; margin-left: auto;
+    }
+    .lp-btn-login {
+      padding: 8px 18px; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 600; color: var(--gray-700);
+      transition: all 0.18s ease; cursor: pointer;
+    }
+    .lp-btn-login:hover { background: var(--gray-100); color: var(--gray-900); }
+    .lp-btn-cta {
+      padding: 8px 20px; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      box-shadow: 0 2px 10px rgba(99,102,241,.35);
+      transition: all 0.18s ease; cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center;
+    }
+    .lp-btn-cta:hover {
+      box-shadow: 0 4px 18px rgba(99,102,241,.45);
+      transform: translateY(-1px);
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      padding-top: 140px;
+      padding-bottom: 96px;
+      overflow: hidden;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99,102,241,.12) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 50% at 80% 80%, rgba(139,92,246,.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      position: relative; z-index: 1;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 6px 16px; border-radius: 999px;
+      background: var(--primary-light);
+      color: var(--primary); font-size: 0.85rem; font-weight: 600;
+      margin-bottom: 28px;
+      border: 1px solid rgba(99,102,241,.22);
+    }
+    .hero-badge-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--primary);
+      animation: badge-blink 2s ease-in-out infinite;
+    }
+    @keyframes badge-blink {
+      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+    }
+    .hero-h1 {
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: var(--gray-900);
+      margin-bottom: 24px;
+    }
+    .hero-h1 .grad-text {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--gray-500);
+      max-width: 560px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+    }
+    .hero-ctas {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center;
+      margin-bottom: 64px;
+    }
+    .hero-btn-primary {
+      padding: 15px 32px; border-radius: 12px;
+      font-size: 1rem; font-weight: 700; color: #fff;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      box-shadow: 0 4px 20px rgba(99,102,241,.42);
+      transition: all 0.2s ease; cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .hero-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(99,102,241,.50);
+    }
+    .hero-btn-secondary {
+      padding: 14px 28px; border-radius: 12px;
+      font-size: 1rem; font-weight: 600; color: var(--gray-700);
+      background: #fff;
+      border: 1.5px solid var(--gray-200);
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      transition: all 0.2s ease; cursor: pointer;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .hero-btn-secondary:hover {
+      background: var(--gray-50); border-color: var(--gray-300);
+      transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,.09);
+    }
+
+    /* ===== HERO MOCKUP ===== */
+    .hero-mockup-wrap {
+      width: 100%; max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+      animation: mockup-float 5s ease-in-out infinite;
+    }
+    @keyframes mockup-float {
+      0%,100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    .hero-mockup-shadow {
+      position: absolute;
+      bottom: -24px; left: 50%;
+      transform: translateX(-50%);
+      width: 70%; height: 40px;
+      background: radial-gradient(ellipse, rgba(99,102,241,.22) 0%, transparent 70%);
+      filter: blur(8px);
+    }
+    .hero-mockup {
+      background: var(--gray-900);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow:
+        0 2px 0 rgba(255,255,255,.06) inset,
+        0 0 0 1px rgba(255,255,255,.06),
+        0 32px 80px rgba(0,0,0,.40),
+        0 8px 24px rgba(99,102,241,.18);
+    }
+    /* Mockup titlebar */
+    .mockup-titlebar {
+      height: 40px;
+      background: #1e293b;
+      display: flex; align-items: center;
+      padding: 0 16px; gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .mockup-dot {
+      width: 11px; height: 11px; border-radius: 50%;
+    }
+    .mockup-dot-r { background: #ef4444; }
+    .mockup-dot-y { background: #f59e0b; }
+    .mockup-dot-g { background: #10b981; }
+    .mockup-titlebar-label {
+      margin-left: 10px;
+      font-size: 0.75rem; color: rgba(255,255,255,.4);
+      font-weight: 500;
+    }
+    .mockup-titlebar-tabs {
+      display: flex; gap: 2px; margin-left: 16px;
+    }
+    .mockup-tab {
+      padding: 4px 12px; border-radius: 5px;
+      font-size: 0.72rem; color: rgba(255,255,255,.4); font-weight: 500;
+    }
+    .mockup-tab.active {
+      background: rgba(99,102,241,.3); color: rgba(255,255,255,.9);
+    }
+    /* Mockup body: 3-column layout */
+    .mockup-body {
+      display: flex; height: 380px;
+    }
+    /* Left sidebar: step list */
+    .mockup-sidebar {
+      width: 120px; min-width: 120px;
+      background: #1a2234;
+      border-right: 1px solid rgba(255,255,255,.06);
+      padding: 12px 8px;
+      display: flex; flex-direction: column; gap: 7px;
+      overflow: hidden;
+    }
+    .mockup-sidebar-label {
+      font-size: 0.62rem; color: rgba(255,255,255,.3);
+      font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      padding: 0 4px; margin-bottom: 4px;
+    }
+    .mockup-step-thumb {
+      border-radius: 6px; overflow: hidden;
+      border: 1.5px solid rgba(255,255,255,.08);
+      cursor: pointer; position: relative;
+      transition: border-color .15s;
+    }
+    .mockup-step-thumb.active {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99,102,241,.3);
+    }
+    .mockup-thumb-img {
+      height: 52px; background: #0f172a;
+      position: relative; overflow: hidden;
+    }
+    /* Fake UI contents in thumb */
+    .mockup-thumb-img::before {
+      content: ''; position: absolute;
+      top: 6px; left: 6px; right: 6px;
+      height: 6px; border-radius: 3px;
+      background: rgba(255,255,255,.12);
+    }
+    .mockup-thumb-img::after {
+      content: ''; position: absolute;
+      top: 18px; left: 6px; right: 20px;
+      height: 4px; border-radius: 2px;
+      background: rgba(255,255,255,.07);
+    }
+    .mockup-thumb-hotspot {
+      position: absolute; bottom: 8px; right: 10px;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #6366f1; border: 1.5px solid #fff;
+    }
+    .mockup-step-num {
+      font-size: 0.6rem; color: rgba(255,255,255,.35); font-weight: 600;
+      padding: 3px 5px;
+    }
+    .mockup-step-thumb.active .mockup-step-num {
+      color: #a5b4fc;
+    }
+
+    /* Center canvas */
+    .mockup-canvas {
+      flex: 1;
+      background: #0f172a;
+      position: relative; overflow: hidden;
+    }
+    /* Fake screenshot layers */
+    .mc-browser-bar {
+      height: 30px;
+      background: #1e293b;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      display: flex; align-items: center; padding: 0 12px; gap: 8px;
+    }
+    .mc-url-bar {
+      flex: 1; height: 17px; border-radius: 9px;
+      background: rgba(255,255,255,.06);
+      display: flex; align-items: center; padding: 0 8px;
+    }
+    .mc-url-text { font-size: 0.58rem; color: rgba(255,255,255,.3); font-weight: 400; }
+    .mc-content {
+      position: relative; padding: 16px 20px;
+      height: calc(100% - 30px);
+    }
+    /* Fake app content inside canvas */
+    .mc-app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .mc-app-title {
+      font-size: 0.72rem; color: rgba(255,255,255,.5); font-weight: 700;
+    }
+    .mc-app-btns { display: flex; gap: 5px; }
+    .mc-app-btn {
+      height: 16px; border-radius: 4px;
+      background: rgba(255,255,255,.07);
+    }
+    .mc-app-btn-primary {
+      background: rgba(99,102,241,.5);
+      width: 40px;
+    }
+    .mc-app-btn-sec { width: 30px; }
+    .mc-card-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .mc-card {
+      border-radius: 6px; background: #1e293b;
+      border: 1px solid rgba(255,255,255,.06);
+      padding: 8px 10px; flex: 1;
+    }
+    .mc-card-label {
+      font-size: 0.55rem; color: rgba(255,255,255,.25); margin-bottom: 4px;
+    }
+    .mc-card-val {
+      font-size: 0.82rem; color: rgba(255,255,255,.75); font-weight: 700;
+    }
+    .mc-table {
+      background: #1a2234; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.06);
+      overflow: hidden;
+    }
+    .mc-table-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    .mc-table-row:last-child { border-bottom: none; }
+    .mc-table-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #6366f1; flex-shrink: 0;
+    }
+    .mc-table-text {
+      flex: 1; height: 5px; border-radius: 3px;
+      background: rgba(255,255,255,.1);
+    }
+    .mc-table-badge {
+      height: 10px; width: 28px; border-radius: 5px;
+      background: rgba(16,185,129,.25);
+    }
+
+    /* Hotspot annotation on canvas */
+    .mc-hotspot {
+      position: absolute;
+      top: 52%; left: 55%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+    .mc-hotspot-dot {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #6366f1; border: 2.5px solid #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; color: #fff; font-weight: 700;
+      position: relative; z-index: 2;
+      box-shadow: 0 2px 8px rgba(99,102,241,.5);
+    }
+    .mc-hotspot-ring {
+      position: absolute; inset: -7px; border-radius: 50%;
+      border: 2px solid #6366f1;
+      animation: mc-pulse 2s ease-out infinite;
+      pointer-events: none;
+    }
+    .mc-hotspot-ring2 {
+      position: absolute; inset: -14px; border-radius: 50%;
+      border: 1.5px solid #6366f1;
+      animation: mc-pulse 2s ease-out infinite .5s;
+      pointer-events: none;
+    }
+    @keyframes mc-pulse {
+      0% { transform: scale(.7); opacity: .8; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+    /* Popup floating above canvas */
+    .mc-popup {
+      position: absolute;
+      top: 18%; left: 38%;
+      background: #fff; border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.35);
+      width: 190px; z-index: 20;
+      overflow: hidden;
+    }
+    .mc-popup-header {
+      padding: 10px 12px 8px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .mc-popup-title {
+      font-size: 0.68rem; font-weight: 700; color: #0f172a; margin-bottom: 3px;
+    }
+    .mc-popup-desc {
+      font-size: 0.58rem; color: #64748b; line-height: 1.5;
+    }
+    .mc-popup-footer {
+      padding: 7px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .mc-popup-step { font-size: 0.55rem; color: #94a3b8; }
+    .mc-popup-btn {
+      background: #6366f1; color: #fff;
+      border-radius: 5px; padding: 4px 10px;
+      font-size: 0.58rem; font-weight: 700;
+    }
+    .mc-popup-arrow {
+      position: absolute; bottom: -6px; left: 50%;
+      transform: translateX(-50%) rotate(45deg);
+      width: 10px; height: 10px;
+      background: #fff;
+      box-shadow: 2px 2px 3px rgba(0,0,0,.06);
+    }
+
+    /* Right properties panel */
+    .mockup-props {
+      width: 160px; min-width: 160px;
+      background: #1a2234;
+      border-left: 1px solid rgba(255,255,255,.06);
+      padding: 12px 10px;
+      overflow: hidden;
+    }
+    .props-section-label {
+      font-size: 0.6rem; color: rgba(255,255,255,.3);
+      font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .props-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .props-key {
+      font-size: 0.62rem; color: rgba(255,255,255,.35); font-weight: 500;
+    }
+    .props-val {
+      font-size: 0.65rem; color: rgba(255,255,255,.65); font-weight: 600;
+    }
+    .props-color-dot {
+      width: 12px; height: 12px; border-radius: 3px;
+      background: #6366f1; flex-shrink: 0;
+    }
+    .props-input-mock {
+      height: 20px; border-radius: 4px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      margin-bottom: 7px; padding: 0 7px;
+      display: flex; align-items: center;
+    }
+    .props-input-text {
+      font-size: 0.6rem; color: rgba(255,255,255,.4);
+    }
+    .props-divider {
+      height: 1px; background: rgba(255,255,255,.06);
+      margin: 10px 0;
+    }
+    .props-type-row {
+      display: flex; gap: 4px; margin-bottom: 8px;
+    }
+    .props-type-chip {
+      flex: 1; text-align: center;
+      padding: 4px 0; border-radius: 4px;
+      font-size: 0.58rem; color: rgba(255,255,255,.3);
+      background: rgba(255,255,255,.05);
+      cursor: pointer;
+    }
+    .props-type-chip.active {
+      background: rgba(99,102,241,.35);
+      color: #a5b4fc;
+    }
+    .props-slider-wrap { margin-bottom: 8px; }
+    .props-slider-track {
+      height: 4px; border-radius: 2px;
+      background: rgba(255,255,255,.1); position: relative;
+    }
+    .props-slider-fill {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      border-radius: 2px; background: #6366f1;
+      width: 65%;
+    }
+    .props-slider-thumb {
+      position: absolute; top: 50%; left: 65%;
+      transform: translate(-50%, -50%);
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #fff; box-shadow: 0 0 0 2px #6366f1;
+    }
+
+    /* ===== SOCIAL PROOF ===== */
+    .social-proof {
+      padding: 48px 0;
+      border-top: 1px solid var(--gray-100);
+      border-bottom: 1px solid var(--gray-100);
+      background: var(--gray-50);
+    }
+    .social-proof-inner {
+      display: flex; flex-direction: column; align-items: center; gap: 24px;
+    }
+    .social-proof-label {
+      font-size: 0.85rem; color: var(--gray-400); font-weight: 500;
+      text-align: center;
+    }
+    .social-proof-logos {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap; justify-content: center;
+    }
+    .proof-logo {
+      padding: 8px 22px; border-radius: 8px;
+      background: #fff; border: 1px solid var(--gray-200);
+      font-size: 0.85rem; font-weight: 700; color: var(--gray-400);
+      letter-spacing: -0.01em;
+      box-shadow: var(--shadow-xs);
+    }
+
+    /* ===== FEATURES ===== */
+    .features { background: #fff; }
+    .section-header { text-align: center; margin-bottom: 60px; }
+    .section-eyebrow {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 14px; border-radius: 999px;
+      background: var(--primary-light); color: var(--primary);
+      font-size: 0.8rem; font-weight: 700; letter-spacing: .03em;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800; color: var(--gray-900);
+      letter-spacing: -0.025em; margin-bottom: 16px;
+    }
+    .section-sub {
+      font-size: 1.05rem; color: var(--gray-500); max-width: 540px; margin: 0 auto;
+      line-height: 1.7;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      padding: 28px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      cursor: default;
+    }
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(99,102,241,.13);
+      border-color: rgba(99,102,241,.25);
+    }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; margin-bottom: 18px;
+      background: var(--primary-light);
+    }
+    .feature-title {
+      font-size: 1.05rem; font-weight: 700; color: var(--gray-900); margin-bottom: 10px;
+    }
+    .feature-desc {
+      font-size: 0.9rem; color: var(--gray-500); line-height: 1.65;
+    }
+
+    /* ===== HOW TO USE ===== */
+    .how-to-use { background: var(--gray-50); }
+    .steps-grid {
+      display: flex; gap: 0; align-items: stretch;
+      position: relative;
+    }
+    /* Connector line between steps */
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 36px; left: calc(33.333% / 2); right: calc(33.333% / 2);
+      height: 2px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+      z-index: 0;
+    }
+    .step-item {
+      flex: 1; text-align: center; padding: 0 32px;
+      position: relative; z-index: 1;
+    }
+    .step-num {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff; font-size: 1.5rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+      box-shadow: 0 4px 16px rgba(99,102,241,.38);
+      position: relative;
+    }
+    .step-num-ring {
+      position: absolute; inset: -6px; border-radius: 50%;
+      border: 2px solid rgba(99,102,241,.25);
+    }
+    .step-icon { font-size: 1.8rem; margin-bottom: 14px; }
+    .step-title {
+      font-size: 1.12rem; font-weight: 700; color: var(--gray-900); margin-bottom: 10px;
+    }
+    .step-desc { font-size: 0.92rem; color: var(--gray-500); line-height: 1.65; }
+
+    /* ===== AI SPOTLIGHT ===== */
+    .ai-section {
+      background: var(--dark-bg);
+      padding: 96px 0;
+    }
+    .ai-inner {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+    }
+    .ai-text-col {}
+    .ai-eyebrow {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 14px; border-radius: 999px;
+      background: rgba(99,102,241,.18); color: #a5b4fc;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: .03em;
+      margin-bottom: 20px;
+    }
+    .ai-title {
+      font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+      font-weight: 800; color: #fff;
+      letter-spacing: -0.025em; margin-bottom: 16px; line-height: 1.2;
+    }
+    .ai-sub {
+      font-size: 1rem; color: rgba(255,255,255,.5); line-height: 1.7; margin-bottom: 40px;
+    }
+    .ai-features-list { display: flex; flex-direction: column; gap: 20px; }
+    .ai-feature-item {
+      display: flex; align-items: flex-start; gap: 16px;
+      padding: 18px 20px; border-radius: 12px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.07);
+      transition: background .2s ease, border-color .2s ease;
+    }
+    .ai-feature-item:hover {
+      background: rgba(99,102,241,.1);
+      border-color: rgba(99,102,241,.2);
+    }
+    .ai-feature-icon {
+      width: 38px; height: 38px; border-radius: 9px;
+      background: rgba(99,102,241,.22);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .ai-feature-text {}
+    .ai-feature-title {
+      font-size: 0.95rem; font-weight: 700; color: rgba(255,255,255,.9); margin-bottom: 4px;
+    }
+    .ai-feature-desc {
+      font-size: 0.85rem; color: rgba(255,255,255,.45); line-height: 1.6;
+    }
+    /* AI visual column */
+    .ai-visual-col {
+      position: relative;
+    }
+    .ai-visual-card {
+      background: #1e293b; border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,.4);
+    }
+    .ai-visual-topbar {
+      height: 36px; background: #0f172a;
+      display: flex; align-items: center; padding: 0 16px; gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .ai-visual-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .ai-visual-body { padding: 20px; }
+    .ai-typing-block {
+      background: rgba(99,102,241,.12); border-radius: 8px;
+      border: 1px solid rgba(99,102,241,.2);
+      padding: 12px 16px; margin-bottom: 12px;
+    }
+    .ai-typing-label {
+      font-size: 0.65rem; color: #a5b4fc; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px;
+    }
+    .ai-typing-text {
+      font-size: 0.82rem; color: rgba(255,255,255,.75); line-height: 1.6;
+    }
+    .ai-typing-cursor {
+      display: inline-block; width: 2px; height: 12px;
+      background: #a5b4fc; vertical-align: middle; margin-left: 2px;
+      animation: cursor-blink 1s steps(1) infinite;
+    }
+    @keyframes cursor-blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+    .ai-tag-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 8px; }
+    .ai-tag {
+      padding: 4px 10px; border-radius: 999px;
+      font-size: 0.68rem; font-weight: 600;
+      background: rgba(99,102,241,.2); color: #a5b4fc;
+    }
+    .ai-progress-block { margin-top: 12px; }
+    .ai-progress-item { margin-bottom: 10px; }
+    .ai-progress-head {
+      display: flex; justify-content: space-between;
+      font-size: 0.65rem; margin-bottom: 4px;
+    }
+    .ai-progress-key { color: rgba(255,255,255,.45); }
+    .ai-progress-pct { color: #a5b4fc; font-weight: 700; }
+    .ai-progress-track {
+      height: 5px; border-radius: 3px;
+      background: rgba(255,255,255,.07);
+    }
+    .ai-progress-fill {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, #6366f1, #a78bfa);
+    }
+
+    /* ===== ANNOTATION TYPES ===== */
+    .annotations-section { background: #fff; }
+    .ann-types-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    .ann-type-card {
+      border-radius: 16px;
+      border: 1px solid var(--gray-200);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+    .ann-type-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 36px rgba(0,0,0,.1);
+    }
+    .ann-type-demo {
+      height: 150px;
+      position: relative; overflow: hidden;
+      background: #f8fafc;
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* Demo backgrounds */
+    .ann-type-demo.demo-hotspot { background: linear-gradient(135deg, #eef2ff, #e0e7ff); }
+    .ann-type-demo.demo-callout { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+    .ann-type-demo.demo-spotlight { background: #0f172a; }
+    .ann-type-demo.demo-mask { background: #1e293b; }
+
+    /* Hotspot demo */
+    .demo-hotspot-dot {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: #6366f1; border: 3px solid #fff;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 0.75rem; font-weight: 700;
+      position: relative; z-index: 2;
+      box-shadow: 0 2px 10px rgba(99,102,241,.5);
+    }
+    .demo-hotspot-pulse {
+      position: absolute; border-radius: 50%; border: 2px solid #6366f1;
+      animation: demo-hs-pulse 2s ease-out infinite;
+    }
+    .demo-hotspot-p1 { width: 46px; height: 46px; animation-delay: 0s; }
+    .demo-hotspot-p2 { width: 62px; height: 62px; animation-delay: .6s; }
+    .demo-hotspot-p3 { width: 80px; height: 80px; animation-delay: 1.2s; }
+    @keyframes demo-hs-pulse {
+      0% { transform: scale(.6); opacity: .8; }
+      100% { transform: scale(1); opacity: 0; }
+    }
+
+    /* Callout demo */
+    .demo-callout-bubble {
+      background: #fff; border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.12);
+      padding: 10px 14px; max-width: 160px;
+      position: relative;
+    }
+    .demo-callout-title { font-size: 0.7rem; font-weight: 700; color: var(--gray-900); margin-bottom: 3px; }
+    .demo-callout-body { font-size: 0.6rem; color: var(--gray-500); line-height: 1.5; }
+    .demo-callout-arrow {
+      position: absolute; bottom: -7px; left: 22px;
+      width: 12px; height: 12px; background: #fff;
+      transform: rotate(45deg);
+      box-shadow: 2px 2px 4px rgba(0,0,0,.06);
+    }
+    .demo-callout-dot {
+      position: absolute; bottom: -28px; left: 28px;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #10b981; border: 2px solid #fff;
+    }
+
+    /* Spotlight demo */
+    .demo-spotlight-center {
+      position: absolute;
+      width: 80px; height: 56px; border-radius: 8px;
+      background: rgba(255,255,255,.15);
+      border: 2px solid rgba(255,255,255,.5);
+      box-shadow: 0 0 0 9999px rgba(0,0,0,.55);
+      z-index: 2;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .demo-spotlight-label {
+      font-size: 0.62rem; color: rgba(255,255,255,.8); font-weight: 600;
+    }
+    /* BG elements behind spotlight */
+    .demo-spotlight-bg-el {
+      position: absolute; border-radius: 4px;
+      background: rgba(255,255,255,.06);
+    }
+
+    /* Mask demo */
+    .demo-mask-content {
+      width: 140px; font-size: 0.62rem; color: rgba(255,255,255,.5); padding: 10px;
+    }
+    .demo-mask-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+    }
+    .demo-mask-label { color: rgba(255,255,255,.35); width: 40px; flex-shrink: 0; }
+    .demo-mask-val { flex: 1; height: 10px; border-radius: 3px; background: rgba(255,255,255,.08); }
+    .demo-mask-blur {
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(100,116,139,.6) 0px, rgba(100,116,139,.6) 3px,
+        rgba(71,85,105,.4) 3px, rgba(71,85,105,.4) 6px
+      );
+      filter: blur(1px);
+    }
+
+    .ann-type-info { padding: 16px 18px; }
+    .ann-type-name { font-size: 0.95rem; font-weight: 700; color: var(--gray-900); margin-bottom: 5px; }
+    .ann-type-desc { font-size: 0.82rem; color: var(--gray-500); line-height: 1.55; }
+
+    /* ===== PRICING ===== */
+    .pricing { background: var(--gray-50); }
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 24px; align-items: start;
+    }
+    .pricing-card {
+      background: #fff; border-radius: 20px;
+      border: 1.5px solid var(--gray-200);
+      box-shadow: var(--shadow-sm);
+      padding: 32px 28px;
+      transition: transform .22s ease, box-shadow .22s ease;
+      position: relative; overflow: hidden;
+    }
+    .pricing-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
+    .pricing-card.featured {
+      border-color: #6366f1;
+      box-shadow: 0 8px 40px rgba(99,102,241,.18);
+    }
+    .pricing-card.featured::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    }
+    .pricing-recommend {
+      display: inline-flex; align-items: center;
+      padding: 4px 12px; border-radius: 999px;
+      background: rgba(99,102,241,.1); color: var(--primary);
+      font-size: 0.73rem; font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .pricing-name {
+      font-size: 1.15rem; font-weight: 800; color: var(--gray-900); margin-bottom: 6px;
+    }
+    .pricing-price-row { display: flex; align-items: flex-end; gap: 3px; margin-bottom: 6px; }
+    .pricing-currency { font-size: 1.3rem; font-weight: 700; color: var(--gray-900); line-height: 1; }
+    .pricing-amount { font-size: 2.8rem; font-weight: 800; color: var(--gray-900); line-height: 1; }
+    .pricing-period { font-size: 0.85rem; color: var(--gray-400); align-self: flex-end; padding-bottom: 4px; }
+    .pricing-custom { font-size: 1.5rem; font-weight: 800; color: var(--gray-900); }
+    .pricing-tagline { font-size: 0.85rem; color: var(--gray-500); margin-bottom: 24px; }
+    .pricing-divider { height: 1px; background: var(--gray-100); margin-bottom: 20px; }
+    .pricing-features-list { display: flex; flex-direction: column; gap: 11px; margin-bottom: 28px; }
+    .pricing-feat-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 0.88rem; color: var(--gray-600);
+    }
+    .pricing-check {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: #d1fae5; color: #065f46;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 800; flex-shrink: 0; margin-top: 1px;
+    }
+    .pricing-check.featured-check { background: rgba(99,102,241,.12); color: var(--primary); }
+    .pricing-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; padding: 14px; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      transition: all .2s ease; text-decoration: none;
+    }
+    .pricing-btn-outline {
+      border: 1.5px solid var(--gray-300); color: var(--gray-700);
+      background: #fff;
+    }
+    .pricing-btn-outline:hover { background: var(--gray-50); border-color: var(--gray-400); }
+    .pricing-btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99,102,241,.38);
+    }
+    .pricing-btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(99,102,241,.48);
+      transform: translateY(-1px);
+    }
+
+    /* ===== FINAL CTA ===== */
+    .final-cta {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #9333ea 100%);
+      padding: 96px 0;
+      position: relative; overflow: hidden;
+    }
+    .final-cta::before {
+      content: '';
+      position: absolute; top: -60%; left: -20%;
+      width: 60%; height: 200%;
+      background: radial-gradient(ellipse, rgba(255,255,255,.07) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .final-cta::after {
+      content: '';
+      position: absolute; bottom: -40%; right: -10%;
+      width: 50%; height: 150%;
+      background: radial-gradient(ellipse, rgba(255,255,255,.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .final-cta-inner {
+      text-align: center; position: relative; z-index: 1;
+    }
+    .final-cta-label {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 14px; border-radius: 999px;
+      background: rgba(255,255,255,.15); color: rgba(255,255,255,.9);
+      font-size: 0.8rem; font-weight: 700; margin-bottom: 20px;
+    }
+    .final-cta-title {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800; color: #fff;
+      letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 16px;
+    }
+    .final-cta-sub {
+      font-size: 1.05rem; color: rgba(255,255,255,.7);
+      margin-bottom: 40px; max-width: 480px; margin-left: auto; margin-right: auto;
+    }
+    .final-cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .final-cta-btn-primary {
+      padding: 16px 36px; border-radius: 12px;
+      font-size: 1.05rem; font-weight: 800; color: #6366f1;
+      background: #fff; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,.2);
+      transition: all .2s ease; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .final-cta-btn-primary:hover {
+      transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,.28);
+    }
+    .final-cta-note {
+      margin-top: 20px; font-size: 0.85rem; color: rgba(255,255,255,.5);
+    }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      background: var(--gray-900);
+      padding: 64px 0 40px;
+    }
+    .footer-inner {
+      display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr;
+      gap: 48px; margin-bottom: 48px;
+    }
+    .footer-brand {}
+    .footer-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 800; font-size: 1.1rem; color: #fff;
+      letter-spacing: -0.02em; margin-bottom: 14px; text-decoration: none;
+    }
+    .footer-logo-icon {
+      width: 30px; height: 30px; border-radius: 7px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 0.85rem; font-weight: 800;
+    }
+    .footer-tagline { font-size: 0.85rem; color: rgba(255,255,255,.4); line-height: 1.65; margin-bottom: 20px; }
+    .footer-socials { display: flex; gap: 10px; }
+    .footer-social {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.1);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.5); font-size: 0.8rem;
+      transition: all .2s ease; cursor: pointer;
+    }
+    .footer-social:hover { background: rgba(99,102,241,.2); color: #a5b4fc; border-color: rgba(99,102,241,.3); }
+    .footer-col-title {
+      font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,.55);
+      text-transform: uppercase; letter-spacing: .07em; margin-bottom: 16px;
+    }
+    .footer-links { display: flex; flex-direction: column; gap: 10px; }
+    .footer-link {
+      font-size: 0.88rem; color: rgba(255,255,255,.45);
+      transition: color .15s ease; cursor: pointer;
+    }
+    .footer-link:hover { color: rgba(255,255,255,.85); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,.07);
+      padding-top: 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      flex-wrap: wrap;
+    }
+    .footer-copy { font-size: 0.82rem; color: rgba(255,255,255,.3); }
+    .footer-bottom-links { display: flex; gap: 20px; }
+    .footer-bottom-link { font-size: 0.82rem; color: rgba(255,255,255,.35); cursor: pointer; }
+    .footer-bottom-link:hover { color: rgba(255,255,255,.7); }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .ann-types-grid { grid-template-columns: repeat(2, 1fr); }
+      .ai-inner { grid-template-columns: 1fr; gap: 40px; }
+      .ai-visual-col { display: none; }
+      .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+      .footer-inner { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .footer-brand { grid-column: 1 / -1; }
+      .steps-grid { flex-direction: column; gap: 32px; }
+      .steps-grid::before { display: none; }
+      .mockup-sidebar { width: 80px; min-width: 80px; }
+      .mockup-props { width: 120px; min-width: 120px; }
+    }
+    @media (max-width: 600px) {
+      .lp-nav-links { display: none; }
+      .features-grid { grid-template-columns: 1fr; }
+      .ann-types-grid { grid-template-columns: 1fr 1fr; }
+      .footer-inner { grid-template-columns: 1fr; }
+      .hero-mockup-wrap { max-width: 100%; }
+      .mockup-sidebar { display: none; }
+      .mockup-props { display: none; }
+      .lp-btn-login { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===================== NAV ===================== -->
+  <nav class="lp-nav">
+    <div class="lp-nav-inner">
+      <a href="index.html" class="lp-nav-logo">
+        <div class="lp-logo-icon">W</div>
+        演示Demo
+      </a>
+      <nav class="lp-nav-links">
+        <a href="#features" class="lp-nav-link">功能</a>
+        <a href="#pricing" class="lp-nav-link">定价</a>
+        <a href="#" class="lp-nav-link">文档</a>
+      </nav>
+      <div class="lp-nav-actions">
+        <a href="#" class="lp-btn-login">登录</a>
+        <a href="app.html" class="lp-btn-cta">免费开始 →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <!-- Badge -->
+        <div class="hero-badge reveal">
+          <div class="hero-badge-dot"></div>
+          ✨ AI 驱动的产品演示工具
+        </div>
+
+        <!-- H1 -->
+        <h1 class="hero-h1 reveal reveal-delay-1">
+          几分钟创建<br>
+          <span class="grad-text">专业产品演示</span>
+        </h1>
+
+        <!-- Subtext -->
+        <p class="hero-sub reveal reveal-delay-2">
+          上传产品截图，AI 自动生成标注文字和语音旁白，添加热点、气泡、聚光灯等专业标注，一键生成分享链接或嵌入到官网。
+        </p>
+
+        <!-- CTAs -->
+        <div class="hero-ctas reveal reveal-delay-3">
+          <a href="app.html" class="hero-btn-primary">
+            免费开始创建 →
+          </a>
+          <a href="player.html?demo=sample" class="hero-btn-secondary">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="10"/>
+              <polygon fill="currentColor" stroke="none" points="10,8 17,12 10,16"/>
+            </svg>
+            查看演示示例
+          </a>
+        </div>
+
+        <!-- Hero Mockup -->
+        <div class="hero-mockup-wrap reveal reveal-delay-4">
+          <div class="hero-mockup-shadow"></div>
+          <div class="hero-mockup">
+            <!-- Title bar -->
+            <div class="mockup-titlebar">
+              <div class="mockup-dot mockup-dot-r"></div>
+              <div class="mockup-dot mockup-dot-y"></div>
+              <div class="mockup-dot mockup-dot-g"></div>
+              <span class="mockup-titlebar-label">演示Demo — 产品用户引导演示.demo</span>
+              <div class="mockup-titlebar-tabs">
+                <div class="mockup-tab active">编辑</div>
+                <div class="mockup-tab">预览</div>
+                <div class="mockup-tab">分享</div>
+              </div>
+            </div>
+            <!-- 3-column body -->
+            <div class="mockup-body">
+              <!-- Left: step thumbnails -->
+              <div class="mockup-sidebar">
+                <div class="mockup-sidebar-label">步骤</div>
+                <!-- Step 1 active -->
+                <div class="mockup-step-thumb active">
+                  <div class="mockup-thumb-img">
+                    <div class="mockup-thumb-hotspot"></div>
+                  </div>
+                  <div class="mockup-step-num">步骤 1</div>
+                </div>
+                <!-- Step 2 -->
+                <div class="mockup-step-thumb">
+                  <div class="mockup-thumb-img"></div>
+                  <div class="mockup-step-num">步骤 2</div>
+                </div>
+                <!-- Step 3 -->
+                <div class="mockup-step-thumb">
+                  <div class="mockup-thumb-img"></div>
+                  <div class="mockup-step-num">步骤 3</div>
+                </div>
+                <!-- Step 4 -->
+                <div class="mockup-step-thumb">
+                  <div class="mockup-thumb-img"></div>
+                  <div class="mockup-step-num">步骤 4</div>
+                </div>
+                <!-- Add step button -->
+                <div style="margin-top:4px; border:1.5px dashed rgba(255,255,255,.15); border-radius:6px; height:36px; display:flex; align-items:center; justify-content:center;">
+                  <span style="color:rgba(255,255,255,.25); font-size:1.1rem; font-weight:300;">+</span>
+                </div>
+              </div>
+
+              <!-- Center: canvas -->
+              <div class="mockup-canvas">
+                <!-- Fake browser bar inside canvas -->
+                <div class="mc-browser-bar">
+                  <div style="display:flex;gap:5px;flex-shrink:0;">
+                    <div style="width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.1);"></div>
+                    <div style="width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.1);"></div>
+                  </div>
+                  <div class="mc-url-bar">
+                    <span class="mc-url-text">app.example.com/dashboard</span>
+                  </div>
+                </div>
+                <!-- Content area -->
+                <div class="mc-content">
+                  <div class="mc-app-header">
+                    <span class="mc-app-title">数据总览</span>
+                    <div class="mc-app-btns">
+                      <div class="mc-app-btn mc-app-btn-sec"></div>
+                      <div class="mc-app-btn mc-app-btn-primary"></div>
+                    </div>
+                  </div>
+                  <!-- Stats cards row -->
+                  <div class="mc-card-row">
+                    <div class="mc-card">
+                      <div class="mc-card-label">本月访客</div>
+                      <div class="mc-card-val" style="color:#a5b4fc;">12,847</div>
+                    </div>
+                    <div class="mc-card">
+                      <div class="mc-card-label">转化率</div>
+                      <div class="mc-card-val" style="color:#6ee7b7;">3.6%</div>
+                    </div>
+                    <div class="mc-card">
+                      <div class="mc-card-label">收入</div>
+                      <div class="mc-card-val" style="color:#fcd34d;">¥28,430</div>
+                    </div>
+                  </div>
+                  <!-- Table -->
+                  <div class="mc-table">
+                    <div class="mc-table-row" style="background:rgba(255,255,255,.02);">
+                      <div class="mc-table-dot" style="background:#a5b4fc;"></div>
+                      <div class="mc-table-text" style="width:50%;"></div>
+                      <div class="mc-table-badge"></div>
+                    </div>
+                    <div class="mc-table-row">
+                      <div class="mc-table-dot" style="background:#6ee7b7;"></div>
+                      <div class="mc-table-text" style="width:65%;"></div>
+                      <div class="mc-table-badge" style="background:rgba(139,92,246,.25);"></div>
+                    </div>
+                    <div class="mc-table-row">
+                      <div class="mc-table-dot" style="background:#fcd34d;"></div>
+                      <div class="mc-table-text" style="width:42%;"></div>
+                      <div class="mc-table-badge" style="background:rgba(251,191,36,.2);"></div>
+                    </div>
+                    <div class="mc-table-row">
+                      <div class="mc-table-dot"></div>
+                      <div class="mc-table-text" style="width:58%;"></div>
+                      <div class="mc-table-badge" style="background:rgba(255,255,255,.07);"></div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Hotspot annotation -->
+                <div class="mc-hotspot">
+                  <div class="mc-hotspot-ring"></div>
+                  <div class="mc-hotspot-ring2"></div>
+                  <div class="mc-hotspot-dot">1</div>
+                </div>
+                <!-- Popup annotation -->
+                <div class="mc-popup">
+                  <div class="mc-popup-header">
+                    <div class="mc-popup-title">查看实时数据总览</div>
+                    <div class="mc-popup-desc">这里显示你的关键业务指标，包括访客数量、转化率和收入数据。</div>
+                  </div>
+                  <div class="mc-popup-footer">
+                    <span class="mc-popup-step">1 / 4</span>
+                    <div class="mc-popup-btn">下一步 →</div>
+                  </div>
+                  <div class="mc-popup-arrow"></div>
+                </div>
+              </div>
+
+              <!-- Right: properties panel -->
+              <div class="mockup-props">
+                <div class="props-section-label">标注属性</div>
+                <!-- Type selector -->
+                <div class="props-type-row">
+                  <div class="props-type-chip active">热点</div>
+                  <div class="props-type-chip">气泡</div>
+                  <div class="props-type-chip">聚光</div>
+                </div>
+                <div class="props-divider"></div>
+                <!-- Title input mock -->
+                <div style="font-size:.6rem;color:rgba(255,255,255,.3);margin-bottom:4px;font-weight:600;">标题</div>
+                <div class="props-input-mock">
+                  <span class="props-input-text">查看实时数据总览</span>
+                </div>
+                <!-- Desc input mock -->
+                <div style="font-size:.6rem;color:rgba(255,255,255,.3);margin-bottom:4px;font-weight:600;">描述</div>
+                <div class="props-input-mock" style="height:32px;align-items:flex-start;padding-top:5px;">
+                  <span class="props-input-text">这里显示你的关键…</span>
+                </div>
+                <div class="props-divider"></div>
+                <!-- Color -->
+                <div class="props-row">
+                  <span class="props-key">颜色</span>
+                  <div class="props-color-dot"></div>
+                </div>
+                <!-- Position -->
+                <div class="props-row">
+                  <span class="props-key">弹出方向</span>
+                  <span class="props-val">下方</span>
+                </div>
+                <!-- Opacity slider -->
+                <div style="font-size:.6rem;color:rgba(255,255,255,.3);margin-bottom:5px;font-weight:600;">透明度</div>
+                <div class="props-slider-wrap">
+                  <div class="props-slider-track">
+                    <div class="props-slider-fill"></div>
+                    <div class="props-slider-thumb"></div>
+                  </div>
+                </div>
+                <div class="props-divider"></div>
+                <!-- AI Generate button mock -->
+                <div style="background:rgba(99,102,241,.25);border:1px solid rgba(99,102,241,.4);border-radius:6px;padding:7px 8px;text-align:center;cursor:pointer;">
+                  <span style="font-size:.62rem;color:#a5b4fc;font-weight:700;">✨ AI 生成文字</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /mockup -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== SOCIAL PROOF ===================== -->
+  <div class="social-proof">
+    <div class="container">
+      <div class="social-proof-inner">
+        <p class="social-proof-label">深受 <strong style="color:var(--gray-700);">3,000+</strong> 产品团队信赖</p>
+        <div class="social-proof-logos">
+          <div class="proof-logo">ByteCloud</div>
+          <div class="proof-logo">极光科技</div>
+          <div class="proof-logo">NewPilot</div>
+          <div class="proof-logo">融云 SaaS</div>
+          <div class="proof-logo">PinPoint</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== FEATURES ===================== -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-eyebrow">核心功能</div>
+        <h2 class="section-title">一切你需要的演示能力</h2>
+        <p class="section-sub">从标注到分享，从 AI 生成到数据分析，演示Demo 覆盖产品演示的全流程。</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon">🎯</div>
+          <div class="feature-title">多样标注工具</div>
+          <p class="feature-desc">脉冲热点、聚光灯、遮罩、气泡提示，多种标注样式自由选择，精准引导用户视线。</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-title">AI 智能生成</div>
+          <p class="feature-desc">AI 自动识别截图内容，生成标注文字和步骤说明，告别手写文案，一键完成演示创作。</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon">🎙</div>
+          <div class="feature-title">语音旁白</div>
+          <p class="feature-desc">内置 AI 语音引擎，支持中文/英文，多种语气和音色选择，让演示更有感染力。</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-4">
+          <div class="feature-icon">📤</div>
+          <div class="feature-title">一键分享</div>
+          <p class="feature-desc">生成专属分享链接，支持 iframe 嵌入，本地和公网均可访问，随时随地查看演示。</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-5">
+          <div class="feature-icon">🔒</div>
+          <div class="feature-title">数据脱敏</div>
+          <p class="feature-desc">AI 自动识别截图中的邮箱、手机、金额等敏感信息，一键模糊处理，保护用户隐私。</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-6">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">数据看板</div>
+          <p class="feature-desc">实时查看每个演示步骤的浏览量和流失率，了解哪步最受关注，持续优化产品演示效果。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== HOW TO USE ===================== -->
+  <section class="how-to-use">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-eyebrow">使用流程</div>
+        <h2 class="section-title">如何使用</h2>
+        <p class="section-sub">三步完成演示创作，从截图到分享，最快 5 分钟搞定。</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-item reveal reveal-delay-1">
+          <div class="step-num">
+            <div class="step-num-ring"></div>
+            1
+          </div>
+          <div class="step-icon">🖼</div>
+          <div class="step-title">上传截图</div>
+          <p class="step-desc">拖拽或粘贴产品截图，支持批量上传。也可以直接录制屏幕，自动截取每步操作画面。</p>
+        </div>
+        <div class="step-item reveal reveal-delay-2">
+          <div class="step-num">
+            <div class="step-num-ring"></div>
+            2
+          </div>
+          <div class="step-icon">✏️</div>
+          <div class="step-title">添加标注</div>
+          <p class="step-desc">点击图片任意位置添加热点、气泡、聚光灯等标注，AI 自动生成说明文字，支持一键配音。</p>
+        </div>
+        <div class="step-item reveal reveal-delay-3">
+          <div class="step-num">
+            <div class="step-num-ring"></div>
+            3
+          </div>
+          <div class="step-icon">🚀</div>
+          <div class="step-title">发布分享</div>
+          <p class="step-desc">一键生成专属分享链接，或复制 iframe 代码嵌入到官网、文档，随时追踪查看数据。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== AI SPOTLIGHT ===================== -->
+  <section class="ai-section">
+    <div class="container">
+      <div class="ai-inner">
+        <!-- Text column -->
+        <div class="ai-text-col reveal">
+          <div class="ai-eyebrow">✨ AI 能力</div>
+          <h2 class="ai-title">AI 赋能<br>演示创作提速 10 倍</h2>
+          <p class="ai-sub">借助先进的 AI 技术，演示Demo 帮助你自动完成最耗时的工作，让你专注于产品本身。</p>
+          <div class="ai-features-list">
+            <div class="ai-feature-item">
+              <div class="ai-feature-icon">🔍</div>
+              <div class="ai-feature-text">
+                <div class="ai-feature-title">AI 自动标注</div>
+                <p class="ai-feature-desc">识别页面元素，自动生成说明文字，并推荐最佳标注位置和样式。</p>
+              </div>
+            </div>
+            <div class="ai-feature-item">
+              <div class="ai-feature-icon">🎙</div>
+              <div class="ai-feature-text">
+                <div class="ai-feature-title">语音旁白</div>
+                <p class="ai-feature-desc">文字转中文语音，多种语气风格可选，让每一步演示都有专业旁白。</p>
+              </div>
+            </div>
+            <div class="ai-feature-item">
+              <div class="ai-feature-icon">🛡</div>
+              <div class="ai-feature-text">
+                <div class="ai-feature-title">数据脱敏</div>
+                <p class="ai-feature-desc">自动识别表单、邮箱、手机号等敏感数据，一键打码，安全分享演示。</p>
+              </div>
+            </div>
+            <div class="ai-feature-item">
+              <div class="ai-feature-icon">🌐</div>
+              <div class="ai-feature-text">
+                <div class="ai-feature-title">一键翻译</div>
+                <p class="ai-feature-desc">将演示内容翻译成英文、日文等多语言版本，轻松拓展海外市场。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Visual column -->
+        <div class="ai-visual-col reveal reveal-delay-2">
+          <div class="ai-visual-card">
+            <div class="ai-visual-topbar">
+              <div class="ai-visual-dot" style="background:#ef4444;"></div>
+              <div class="ai-visual-dot" style="background:#f59e0b;"></div>
+              <div class="ai-visual-dot" style="background:#10b981;"></div>
+              <span style="margin-left:10px;font-size:.7rem;color:rgba(255,255,255,.3);">AI 分析中...</span>
+            </div>
+            <div class="ai-visual-body">
+              <!-- AI typing block -->
+              <div class="ai-typing-block">
+                <div class="ai-typing-label">AI 生成标注文字</div>
+                <div class="ai-typing-text">
+                  点击「新建演示」按钮，上传你的产品截图，AI 将自动识别界面元素并生成专业说明文字。<span class="ai-typing-cursor"></span>
+                </div>
+              </div>
+              <!-- Tag row -->
+              <div class="ai-tag-row">
+                <div class="ai-tag">热点标注</div>
+                <div class="ai-tag">气泡提示</div>
+                <div class="ai-tag">聚光灯</div>
+                <div class="ai-tag">语音旁白</div>
+              </div>
+              <!-- Progress items -->
+              <div class="ai-progress-block">
+                <div class="ai-progress-item">
+                  <div class="ai-progress-head">
+                    <span class="ai-progress-key">页面元素识别</span>
+                    <span class="ai-progress-pct">98%</span>
+                  </div>
+                  <div class="ai-progress-track">
+                    <div class="ai-progress-fill" style="width:98%;"></div>
+                  </div>
+                </div>
+                <div class="ai-progress-item">
+                  <div class="ai-progress-head">
+                    <span class="ai-progress-key">文案生成质量</span>
+                    <span class="ai-progress-pct">94%</span>
+                  </div>
+                  <div class="ai-progress-track">
+                    <div class="ai-progress-fill" style="width:94%;"></div>
+                  </div>
+                </div>
+                <div class="ai-progress-item">
+                  <div class="ai-progress-head">
+                    <span class="ai-progress-key">敏感数据检测</span>
+                    <span class="ai-progress-pct">100%</span>
+                  </div>
+                  <div class="ai-progress-track">
+                    <div class="ai-progress-fill" style="width:100%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== ANNOTATION TYPES ===================== -->
+  <section class="annotations-section">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-eyebrow">标注类型</div>
+        <h2 class="section-title">专业标注，精准引导</h2>
+        <p class="section-sub">四种精心设计的标注类型，覆盖所有演示场景，引导用户精准理解每一步操作。</p>
+      </div>
+      <div class="ann-types-grid">
+        <!-- Hotspot -->
+        <div class="ann-type-card reveal reveal-delay-1">
+          <div class="ann-type-demo demo-hotspot">
+            <div class="demo-hotspot-pulse demo-hotspot-p3"></div>
+            <div class="demo-hotspot-pulse demo-hotspot-p2"></div>
+            <div class="demo-hotspot-pulse demo-hotspot-p1"></div>
+            <div class="demo-hotspot-dot">1</div>
+          </div>
+          <div class="ann-type-info">
+            <div class="ann-type-name">🎯 脉冲热点</div>
+            <p class="ann-type-desc">带脉冲动画的交互热点，点击展开详细说明，最适合引导关键操作步骤。</p>
+          </div>
+        </div>
+        <!-- Callout bubble -->
+        <div class="ann-type-card reveal reveal-delay-2">
+          <div class="ann-type-demo demo-callout">
+            <div style="position:relative;">
+              <div class="demo-callout-bubble">
+                <div class="demo-callout-title">🚀 一键导出报告</div>
+                <div class="demo-callout-body">点击此按钮可将当前数据导出为 PDF 或 Excel 格式，支持自定义模板。</div>
+                <div class="demo-callout-arrow"></div>
+              </div>
+              <div class="demo-callout-dot"></div>
+            </div>
+          </div>
+          <div class="ann-type-info">
+            <div class="ann-type-name">💬 气泡提示</div>
+            <p class="ann-type-desc">常驻可见的说明气泡，带指示箭头，适合介绍页面功能和重要入口。</p>
+          </div>
+        </div>
+        <!-- Spotlight -->
+        <div class="ann-type-card reveal reveal-delay-3">
+          <div class="ann-type-demo demo-spotlight">
+            <!-- BG elements -->
+            <div class="demo-spotlight-bg-el" style="width:100px;height:12px;top:20px;left:20px;"></div>
+            <div class="demo-spotlight-bg-el" style="width:70px;height:8px;top:40px;left:20px;"></div>
+            <div class="demo-spotlight-bg-el" style="width:120px;height:8px;bottom:30px;right:20px;"></div>
+            <!-- Spotlight -->
+            <div class="demo-spotlight-center">
+              <span class="demo-spotlight-label">核心操作区</span>
+            </div>
+          </div>
+          <div class="ann-type-info">
+            <div class="ann-type-name">🔦 聚光灯效果</div>
+            <p class="ann-type-desc">暗化背景只突出目标区域，让用户的注意力完全聚焦在关键功能上。</p>
+          </div>
+        </div>
+        <!-- Mask/Blur -->
+        <div class="ann-type-card reveal reveal-delay-4">
+          <div class="ann-type-demo demo-mask">
+            <div class="demo-mask-content">
+              <div class="demo-mask-row">
+                <span class="demo-mask-label" style="font-size:.58rem;">用户名</span>
+                <div class="demo-mask-val"></div>
+              </div>
+              <div class="demo-mask-row">
+                <span class="demo-mask-label" style="font-size:.58rem;">邮箱</span>
+                <div class="demo-mask-val demo-mask-blur"></div>
+              </div>
+              <div class="demo-mask-row">
+                <span class="demo-mask-label" style="font-size:.58rem;">手机号</span>
+                <div class="demo-mask-val demo-mask-blur"></div>
+              </div>
+              <div class="demo-mask-row">
+                <span class="demo-mask-label" style="font-size:.58rem;">余额</span>
+                <div class="demo-mask-val demo-mask-blur"></div>
+              </div>
+            </div>
+          </div>
+          <div class="ann-type-info">
+            <div class="ann-type-name">🔒 遮罩背景</div>
+            <p class="ann-type-desc">AI 自动识别敏感字段并打码，安全展示真实界面截图，无需手动处理。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PRICING ===================== -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-eyebrow">价格方案</div>
+        <h2 class="section-title">简单透明的定价</h2>
+        <p class="section-sub">无论团队大小，总有一款适合你的方案。免费版即可上手体验所有核心功能。</p>
+      </div>
+      <div class="pricing-grid">
+        <!-- Free -->
+        <div class="pricing-card reveal reveal-delay-1">
+          <div class="pricing-name">免费版</div>
+          <div class="pricing-price-row">
+            <span class="pricing-currency">¥</span>
+            <span class="pricing-amount">0</span>
+            <span class="pricing-period">/月</span>
+          </div>
+          <p class="pricing-tagline">个人探索，快速上手</p>
+          <div class="pricing-divider"></div>
+          <ul class="pricing-features-list">
+            <li class="pricing-feat-item">
+              <div class="pricing-check">✓</div>
+              <span>最多 5 个演示项目</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check">✓</div>
+              <span>基础标注工具（热点、气泡）</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check">✓</div>
+              <span>本地存储和查看</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check">✓</div>
+              <span>生成分享链接</span>
+            </li>
+            <li class="pricing-feat-item" style="opacity:.45;">
+              <div class="pricing-check" style="background:var(--gray-100);color:var(--gray-400);">—</div>
+              <span>AI 功能</span>
+            </li>
+            <li class="pricing-feat-item" style="opacity:.45;">
+              <div class="pricing-check" style="background:var(--gray-100);color:var(--gray-400);">—</div>
+              <span>数据看板</span>
+            </li>
+          </ul>
+          <a href="app.html" class="pricing-btn pricing-btn-outline">免费开始</a>
+        </div>
+        <!-- Pro (featured) -->
+        <div class="pricing-card featured reveal reveal-delay-2">
+          <div class="pricing-recommend">⭐ 推荐方案</div>
+          <div class="pricing-name">专业版</div>
+          <div class="pricing-price-row">
+            <span class="pricing-currency">¥</span>
+            <span class="pricing-amount" style="color:var(--primary);">99</span>
+            <span class="pricing-period">/月</span>
+          </div>
+          <p class="pricing-tagline">专业团队的首选方案</p>
+          <div class="pricing-divider"></div>
+          <ul class="pricing-features-list">
+            <li class="pricing-feat-item">
+              <div class="pricing-check featured-check">✓</div>
+              <span><strong>无限演示项目</strong></span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check featured-check">✓</div>
+              <span>全部标注工具（聚光灯、遮罩等）</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check featured-check">✓</div>
+              <span>AI 功能全开（生成 + 配音）</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check featured-check">✓</div>
+              <span>实时数据看板</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check featured-check">✓</div>
+              <span>自定义品牌（Logo + 颜色）</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check featured-check">✓</div>
+              <span>数据脱敏 &amp; 一键翻译</span>
+            </li>
+          </ul>
+          <a href="app.html" class="pricing-btn pricing-btn-primary">立即升级专业版</a>
+        </div>
+        <!-- Enterprise -->
+        <div class="pricing-card reveal reveal-delay-3">
+          <div class="pricing-name">企业版</div>
+          <div class="pricing-price-row">
+            <span class="pricing-custom">联系定制</span>
+          </div>
+          <p class="pricing-tagline">大型团队 &amp; 私有部署</p>
+          <div class="pricing-divider"></div>
+          <ul class="pricing-features-list">
+            <li class="pricing-feat-item">
+              <div class="pricing-check">✓</div>
+              <span>专业版全部功能</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check">✓</div>
+              <span>私有化部署</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check">✓</div>
+              <span>团队协作 &amp; 权限管理</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check">✓</div>
+              <span>专属客户成功经理</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check">✓</div>
+              <span>SLA 服务保障</span>
+            </li>
+            <li class="pricing-feat-item">
+              <div class="pricing-check">✓</div>
+              <span>定制开发需求</span>
+            </li>
+          </ul>
+          <a href="mailto:sales@zhansidemo.com" class="pricing-btn pricing-btn-outline">联系销售团队</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FINAL CTA ===================== -->
+  <section class="final-cta">
+    <div class="container">
+      <div class="final-cta-inner reveal">
+        <div class="final-cta-label">🚀 立即开始</div>
+        <h2 class="final-cta-title">立即开始<br>免费体验</h2>
+        <p class="final-cta-sub">加入 3,000+ 产品团队，用更少时间创建更专业的产品演示。</p>
+        <div class="final-cta-actions">
+          <a href="app.html" class="final-cta-btn-primary">
+            免费开始创建 →
+          </a>
+        </div>
+        <p class="final-cta-note">免费版永久可用，无需信用卡</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-inner">
+        <!-- Brand col -->
+        <div class="footer-brand">
+          <a href="index.html" class="footer-logo">
+            <div class="footer-logo-icon">W</div>
+            演示Demo
+          </a>
+          <p class="footer-tagline">AI 驱动的产品演示工具，帮助产品团队几分钟内创建专业的交互式产品演示，一键分享给全世界。</p>
+          <div class="footer-socials">
+            <div class="footer-social" title="微信">微</div>
+            <div class="footer-social" title="微博">博</div>
+            <div class="footer-social" title="Twitter">𝕏</div>
+            <div class="footer-social" title="GitHub">GH</div>
+          </div>
+        </div>
+        <!-- Product -->
+        <div>
+          <div class="footer-col-title">产品</div>
+          <ul class="footer-links">
+            <li><a class="footer-link" href="#features">功能介绍</a></li>
+            <li><a class="footer-link" href="#pricing">定价方案</a></li>
+            <li><a class="footer-link" href="#">更新日志</a></li>
+            <li><a class="footer-link" href="#">路线图</a></li>
+          </ul>
+        </div>
+        <!-- Resources -->
+        <div>
+          <div class="footer-col-title">资源</div>
+          <ul class="footer-links">
+            <li><a class="footer-link" href="#">开发文档</a></li>
+            <li><a class="footer-link" href="#">使用指南</a></li>
+            <li><a class="footer-link" href="#">演示示例</a></li>
+            <li><a class="footer-link" href="#">博客</a></li>
+          </ul>
+        </div>
+        <!-- Company -->
+        <div>
+          <div class="footer-col-title">关于我们</div>
+          <ul class="footer-links">
+            <li><a class="footer-link" href="#">关于我们</a></li>
+            <li><a class="footer-link" href="#">加入我们</a></li>
+            <li><a class="footer-link" href="#">联系我们</a></li>
+            <li><a class="footer-link" href="#">合作伙伴</a></li>
+          </ul>
+        </div>
+      </div>
+      <!-- Footer bottom bar -->
+      <div class="footer-bottom">
+        <span class="footer-copy">© 2024 演示Demo. 保留所有权利。</span>
+        <div class="footer-bottom-links">
+          <a class="footer-bottom-link" href="#">隐私政策</a>
+          <a class="footer-bottom-link" href="#">服务条款</a>
+          <a class="footer-bottom-link" href="#">Cookie 设置</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===================== JAVASCRIPT ===================== -->
+  <script>
+    // ── Scroll reveal via IntersectionObserver ──
+    (function () {
+      var els = document.querySelectorAll('.reveal');
+      if (!('IntersectionObserver' in window)) {
+        els.forEach(function (el) { el.classList.add('visible'); });
+        return;
+      }
+      var observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+      );
+      els.forEach(function (el) { observer.observe(el); });
+    })();
+
+    // ── Navbar scroll shadow ──
+    (function () {
+      var nav = document.querySelector('.lp-nav');
+      window.addEventListener('scroll', function () {
+        if (window.scrollY > 10) {
+          nav.style.boxShadow = '0 2px 20px rgba(0,0,0,.08)';
+        } else {
+          nav.style.boxShadow = 'none';
+        }
+      }, { passive: true });
+    })();
+
+    // ── Smooth anchor scrolling for nav links ──
+    (function () {
+      document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+        a.addEventListener('click', function (e) {
+          var id = a.getAttribute('href');
+          if (id === '#') return;
+          var target = document.querySelector(id);
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

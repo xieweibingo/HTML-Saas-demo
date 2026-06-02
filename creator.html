@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>创建演示 — 演示Demo</title>
+<link rel="stylesheet" href="css/main.css">
+<style>
+* { box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+body { display: flex; flex-direction: column; background: var(--gray-50); }
+
+/* ====== Top Bar ====== */
+.creator-topbar {
+  height: 56px; flex-shrink: 0;
+  background: #fff; border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 16px; z-index: 50;
+}
+.topbar-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 800; font-size: 1rem; color: var(--gray-900);
+  text-decoration: none; padding-right: 12px;
+  border-right: 1px solid var(--gray-200);
+}
+.topbar-logo-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 7px; display: flex; align-items: center;
+  justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 800;
+}
+.demo-title-input {
+  border: none; outline: none; font-size: 0.95rem; font-weight: 600;
+  color: var(--gray-900); background: transparent; flex: 1;
+  min-width: 0; max-width: 280px;
+  padding: 4px 8px; border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+.demo-title-input:hover { background: var(--gray-100); }
+.demo-title-input:focus { background: var(--gray-100); }
+.save-status {
+  font-size: 0.78rem; color: var(--gray-400); white-space: nowrap;
+  display: flex; align-items: center; gap: 5px;
+}
+.save-status.saved { color: var(--success); }
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+/* ====== Layout ====== */
+.creator-body { flex: 1; display: flex; overflow: hidden; }
+
+/* ====== Left Panel: Steps ====== */
+.steps-panel {
+  width: 200px; flex-shrink: 0;
+  background: #fff; border-right: 1px solid var(--gray-200);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.steps-panel-header {
+  padding: 12px; border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.steps-panel-title { font-size: 0.8rem; font-weight: 700; color: var(--gray-500); letter-spacing: 0.06em; text-transform: uppercase; }
+.steps-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.step-thumb {
+  border-radius: var(--radius); border: 2px solid transparent;
+  cursor: pointer; overflow: hidden; position: relative;
+  transition: all var(--transition);
+  background: var(--gray-100);
+}
+.step-thumb:hover { border-color: var(--gray-300); }
+.step-thumb.active { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+.step-thumb-img {
+  width: 100%; aspect-ratio: 16/10;
+  object-fit: cover; display: block;
+  background: var(--gray-100);
+}
+.step-thumb-img-placeholder {
+  width: 100%; aspect-ratio: 16/10;
+  background: linear-gradient(135deg, var(--gray-100), var(--gray-200));
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gray-400); font-size: 1.5rem;
+}
+.step-thumb-label {
+  padding: 6px 8px; font-size: 0.75rem; font-weight: 600; color: var(--gray-700);
+  background: #fff; border-top: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.step-num {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--gray-200); color: var(--gray-600);
+  font-size: 0.7rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-thumb.active .step-num { background: var(--primary); color: #fff; }
+.step-ann-count {
+  font-size: 0.7rem; color: var(--gray-400);
+}
+.step-actions {
+  position: absolute; top: 4px; right: 4px;
+  display: none; gap: 3px;
+}
+.step-thumb:hover .step-actions { display: flex; }
+.step-action-btn {
+  width: 22px; height: 22px; border-radius: 4px;
+  background: rgba(255,255,255,0.9); border: 1px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; cursor: pointer; transition: all var(--transition);
+  color: var(--gray-600);
+}
+.step-action-btn:hover { background: #fff; color: var(--error); }
+.steps-add-btn {
+  margin: 8px; display: flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 10px;
+  border: 2px dashed var(--gray-300); border-radius: var(--radius);
+  color: var(--gray-400); font-size: 0.82rem; cursor: pointer;
+  transition: all var(--transition);
+}
+.steps-add-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+/* ====== Center: Canvas ====== */
+.canvas-area {
+  flex: 1; overflow: hidden;
+  display: flex; flex-direction: column;
+  background: var(--gray-100);
+}
+.canvas-toolbar {
+  height: 50px; background: #fff; border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; gap: 4px;
+  padding: 0 12px;
+}
+.tool-sep { width: 1px; height: 24px; background: var(--gray-200); margin: 0 6px; flex-shrink: 0; }
+.tool-btn {
+  height: 34px; padding: 0 10px; border-radius: var(--radius);
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  color: var(--gray-600); transition: all var(--transition);
+  white-space: nowrap; border: 1.5px solid transparent;
+}
+.tool-btn:hover { background: var(--gray-100); color: var(--gray-900); }
+.tool-btn.active { background: var(--primary-light); color: var(--primary); border-color: rgba(99,102,241,0.3); }
+.tool-btn .tool-icon { font-size: 1rem; line-height: 1; }
+.canvas-scroll {
+  flex: 1; overflow: auto;
+  display: flex; align-items: flex-start; justify-content: flex-start;
+  padding: 32px;
+}
+.canvas-container {
+  position: relative; background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  user-select: none;
+  cursor: crosshair;
+  min-width: 800px;
+  width: 900px;
+}
+.canvas-container.tool-select { cursor: default; }
+.canvas-container.tool-none { cursor: default; }
+.canvas-image {
+  display: block; width: 100%; height: auto;
+  pointer-events: none;
+}
+.canvas-empty {
+  width: 900px; height: 506px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: var(--gray-400); gap: 12px;
+}
+.canvas-empty-icon { font-size: 4rem; opacity: 0.4; }
+.canvas-empty h3 { font-size: 1.1rem; color: var(--gray-500); }
+.canvas-empty p { font-size: 0.85rem; text-align: center; max-width: 280px; }
+.upload-area {
+  border: 2px dashed var(--gray-300); border-radius: var(--radius-lg);
+  padding: 32px 40px; text-align: center; cursor: pointer;
+  transition: all var(--transition); margin-top: 16px;
+}
+.upload-area:hover, .upload-area.drag { border-color: var(--primary); background: var(--primary-light); }
+.upload-area input { display: none; }
+.canvas-annotations { position: absolute; inset: 0; pointer-events: none; }
+.canvas-annotations > * { pointer-events: all; }
+
+/* Canvas ruler overlay */
+.canvas-crosshair {
+  position: absolute; inset: 0; pointer-events: none;
+  z-index: 100;
+}
+.crosshair-h, .crosshair-v {
+  position: absolute; background: rgba(99,102,241,0.5);
+  pointer-events: none; display: none;
+}
+.crosshair-h { left: 0; right: 0; height: 1px; }
+.crosshair-v { top: 0; bottom: 0; width: 1px; }
+.canvas-container:hover .crosshair-h,
+.canvas-container:hover .crosshair-v { display: block; }
+
+/* ====== Right Panel: Properties ====== */
+.props-panel {
+  width: 264px; flex-shrink: 0;
+  background: #fff; border-left: 1px solid var(--gray-200);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.props-tabs { padding: 0 12px; border-bottom: 1px solid var(--gray-100); }
+.props-scroll { flex: 1; overflow-y: auto; padding: 14px 14px 80px; }
+.props-section { margin-bottom: 20px; }
+.props-section-title {
+  font-size: 0.72rem; font-weight: 700; color: var(--gray-400);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.props-field { margin-bottom: 12px; }
+.props-field label { font-size: 0.78rem; font-weight: 600; color: var(--gray-600); display: block; margin-bottom: 4px; }
+.props-field .input, .props-field .select, .props-field .textarea { font-size: 0.82rem; padding: 7px 10px; }
+.props-field .textarea { min-height: 60px; }
+.placement-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.placement-btn {
+  padding: 6px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; cursor: pointer;
+  color: var(--gray-500); transition: all var(--transition);
+}
+.placement-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+.placement-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
+.size-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.size-btn {
+  padding: 6px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--gray-200);
+  text-align: center; font-size: 0.72rem; cursor: pointer;
+  color: var(--gray-500); transition: all var(--transition);
+}
+.size-btn:hover, .size-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+.no-step-selected {
+  padding: 32px 16px; text-align: center; color: var(--gray-400);
+}
+.no-step-selected svg { margin: 0 auto 12px; opacity: 0.3; }
+
+/* ====== AI Panel ====== */
+.ai-panel {
+  position: fixed; right: 264px; top: 56px; bottom: 0;
+  width: 280px; background: #fff;
+  border-left: 1px solid var(--gray-200);
+  z-index: 40; transform: translateX(280px);
+  transition: transform 0.25s ease;
+  display: flex; flex-direction: column;
+  box-shadow: -8px 0 32px rgba(0,0,0,0.08);
+}
+.ai-panel.open { transform: translateX(0); }
+.ai-panel-header {
+  padding: 16px; border-bottom: 1px solid var(--gray-100);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ai-panel-title {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 0.95rem;
+}
+.ai-badge { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; padding: 2px 8px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; }
+.ai-panel-body { flex: 1; overflow-y: auto; padding: 14px; }
+.ai-feature-card {
+  padding: 14px; border-radius: var(--radius-lg);
+  border: 1.5px solid var(--gray-200); margin-bottom: 10px;
+  cursor: pointer; transition: all var(--transition);
+}
+.ai-feature-card:hover { border-color: var(--primary); background: var(--primary-light); }
+.ai-feature-card h4 { font-size: 0.85rem; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.ai-feature-card p { font-size: 0.78rem; color: var(--gray-500); line-height: 1.45; }
+.ai-running { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--primary-light); border-radius: var(--radius); font-size: 0.82rem; color: var(--primary); }
+
+/* ====== Voiceover Panel ====== */
+.voiceover-controls {
+  background: var(--gray-50); border-radius: var(--radius-lg);
+  padding: 12px; margin-top: 8px;
+}
+.voice-playback {
+  display: flex; align-items: center; gap: 8px; margin-top: 10px;
+}
+.voice-btn {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; cursor: pointer; transition: all var(--transition);
+  border: 1.5px solid var(--gray-300); background: #fff;
+}
+.voice-btn:hover { background: var(--gray-100); }
+.voice-btn.playing { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* ====== Hotspot resize handles ====== */
+.resize-handle {
+  position: absolute; width: 8px; height: 8px;
+  background: var(--primary); border: 2px solid #fff;
+  border-radius: 2px; cursor: nwse-resize;
+  z-index: 50;
+}
+.resize-handle.br { bottom: -4px; right: -4px; }
+.resize-handle.bl { bottom: -4px; left: -4px; cursor: nesw-resize; }
+.resize-handle.tr { top: -4px; right: -4px; cursor: nesw-resize; }
+.resize-handle.tl { top: -4px; left: -4px; cursor: nwse-resize; }
+
+/* Drag-over drop zone */
+.step-thumb.drag-over { border-color: var(--primary); background: var(--primary-light); }
+
+/* Publish modal branding preview */
+.brand-preview {
+  padding: 16px; background: var(--gray-50);
+  border-radius: var(--radius); border: 1px solid var(--gray-200);
+  text-align: center;
+}
+.brand-preview-btn {
+  display: inline-block; padding: 8px 20px; border-radius: var(--radius);
+  color: #fff; font-weight: 600; font-size: 0.85rem; margin-top: 8px;
+}
+
+/* Share modal link box */
+.share-link-box {
+  display: flex; gap: 8px; align-items: center;
+  background: var(--gray-50); border: 1px solid var(--gray-200);
+  border-radius: var(--radius); padding: 10px 14px;
+}
+.share-link-box span {
+  flex: 1; font-size: 0.82rem; color: var(--gray-700);
+  font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.embed-code {
+  background: var(--gray-900); color: #a5b4fc;
+  border-radius: var(--radius); padding: 12px;
+  font-size: 0.78rem; font-family: var(--mono);
+  overflow-x: auto; white-space: pre; margin-top: 8px;
+}
+
+/* Annotation selection overlay */
+.ann-selection-ring {
+  position: absolute; inset: -4px;
+  border: 2px dashed var(--primary);
+  border-radius: inherit;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="creator-topbar">
+  <a href="app.html" class="topbar-logo">
+    <div class="topbar-logo-icon">W</div>
+    演示Demo
+  </a>
+  <input type="text" class="demo-title-input" id="demoTitle" value="未命名演示" spellcheck="false">
+  <div class="save-status" id="saveStatus">
+    <span>●</span><span>已保存</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn btn-sm btn-secondary" id="undoBtn" data-tip="撤销 (Ctrl+Z)" disabled>↩ 撤销</button>
+    <button class="btn btn-sm btn-secondary" id="redoBtn" data-tip="重做 (Ctrl+Y)" disabled>↪ 重做</button>
+    <div class="tool-sep"></div>
+    <button class="btn btn-sm btn-secondary" id="aiBtn">🤖 AI 助手</button>
+    <button class="btn btn-sm btn-secondary" id="previewBtn">👁 预览</button>
+    <button class="btn btn-sm btn-primary" id="publishBtn">📤 发布分享</button>
+  </div>
+</div>
+
+<!-- Main Body -->
+<div class="creator-body">
+
+  <!-- Steps Panel -->
+  <div class="steps-panel">
+    <div class="steps-panel-header">
+      <span class="steps-panel-title">步骤列表</span>
+      <span class="text-xs text-muted" id="stepCountLabel">0 步</span>
+    </div>
+    <div class="steps-list" id="stepsList"></div>
+    <div class="steps-add-btn" id="addStepBtn">
+      <span>＋</span><span>添加步骤</span>
+    </div>
+  </div>
+
+  <!-- Canvas Area -->
+  <div class="canvas-area">
+    <!-- Toolbar -->
+    <div class="canvas-toolbar">
+      <span style="font-size:0.75rem;font-weight:700;color:var(--gray-400);letter-spacing:0.05em;margin-right:4px;">标注</span>
+      <button class="tool-btn" data-tool="select" id="toolSelect"><span class="tool-icon">↖</span>选择</button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" data-tool="hotspot" id="toolHotspot"><span class="tool-icon">●</span>脉冲热点</button>
+      <button class="tool-btn" data-tool="callout" id="toolCallout"><span class="tool-icon">💬</span>气泡提示</button>
+      <button class="tool-btn" data-tool="spotlight" id="toolSpotlight"><span class="tool-icon">✦</span>聚光灯</button>
+      <button class="tool-btn" data-tool="backdrop" id="toolBackdrop"><span class="tool-icon">◼</span>遮罩背景</button>
+      <button class="tool-btn" data-tool="rectangle" id="toolRect"><span class="tool-icon">▭</span>区域框选</button>
+      <button class="tool-btn" data-tool="text" id="toolText"><span class="tool-icon">T</span>文字</button>
+      <button class="tool-btn" data-tool="chapter" id="toolChapter"><span class="tool-icon">▣</span>章节卡片</button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" id="clearAnnotationsBtn" style="color:var(--error)"><span class="tool-icon">🗑</span>清空标注</button>
+    </div>
+    <!-- Canvas scroll area -->
+    <div class="canvas-scroll" id="canvasScroll">
+      <div class="canvas-container tool-none" id="canvasContainer">
+        <!-- Image -->
+        <img class="canvas-image hidden" id="canvasImage" alt="">
+        <!-- Empty state -->
+        <div class="canvas-empty" id="canvasEmpty">
+          <div class="canvas-empty-icon">🖼</div>
+          <h3>上传截图开始创建</h3>
+          <p>将产品截图拖入此处，或点击下方按钮上传图片</p>
+          <label class="upload-area" id="uploadArea">
+            <input type="file" id="uploadInput" accept="image/*" multiple>
+            <div>📁 点击选择图片 或 拖拽到此处</div>
+            <div style="font-size:0.75rem;color:var(--gray-400);margin-top:6px;">支持 PNG、JPG、WebP、GIF</div>
+          </label>
+        </div>
+        <!-- Annotations layer -->
+        <div class="canvas-annotations" id="annotationsLayer"></div>
+        <!-- Crosshair -->
+        <div class="canvas-crosshair">
+          <div class="crosshair-h" id="crosshairH"></div>
+          <div class="crosshair-v" id="crosshairV"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Properties Panel -->
+  <div class="props-panel">
+    <div class="props-tabs">
+      <div class="tabs">
+        <div class="tab active" data-panel="annotation">标注属性</div>
+        <div class="tab" data-panel="step">步骤设置</div>
+        <div class="tab" data-panel="demo">演示设置</div>
+      </div>
+    </div>
+    <div class="props-scroll">
+      <!-- Annotation Panel -->
+      <div id="panelAnnotation">
+        <div class="no-step-selected" id="noAnnSelected">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
+          <p>在画布上点击添加标注</p>
+          <p style="font-size:0.75rem;margin-top:4px;">从工具栏选择标注类型，然后在图片上点击放置</p>
+        </div>
+        <div id="annEditor" class="hidden">
+          <div class="props-section">
+            <div class="props-section-title">标注类型</div>
+            <div class="props-field">
+              <select class="select" id="annType">
+                <option value="hotspot">● 脉冲热点</option>
+                <option value="callout">💬 气泡提示</option>
+                <option value="spotlight">✦ 聚光灯</option>
+                <option value="backdrop">◼ 遮罩背景</option>
+                <option value="rectangle">▭ 区域框选</option>
+                <option value="text">T 文字标注</option>
+                <option value="chapter">▣ 章节卡片</option>
+              </select>
+            </div>
+          </div>
+          <div class="props-section">
+            <div class="props-section-title">内容</div>
+            <div class="props-field">
+              <label>标题</label>
+              <input type="text" class="input" id="annTitle" placeholder="输入标注标题">
+            </div>
+            <div class="props-field">
+              <label>描述</label>
+              <textarea class="textarea" id="annDesc" placeholder="输入描述文字（支持 Markdown）"></textarea>
+            </div>
+          </div>
+          <div class="props-section" id="popupPosSection">
+            <div class="props-section-title">气泡方向</div>
+            <div class="placement-grid">
+              <div class="placement-btn" data-placement="top">↑ 上</div>
+              <div class="placement-btn" data-placement="bottom">↓ 下</div>
+              <div class="placement-btn" data-placement="left">← 左</div>
+              <div class="placement-btn" data-placement="right">→ 右</div>
+            </div>
+          </div>
+          <div class="props-section">
+            <div class="props-section-title">点击动作</div>
+            <div class="props-field">
+              <label>点击后</label>
+              <select class="select" id="annAction">
+                <option value="next">前往下一步</option>
+                <option value="goto">跳转到指定步骤</option>
+                <option value="url">打开链接</option>
+                <option value="none">无动作</option>
+              </select>
+            </div>
+            <div class="props-field hidden" id="gotoField">
+              <label>目标步骤</label>
+              <select class="select" id="annGotoTarget"></select>
+            </div>
+            <div class="props-field hidden" id="urlField">
+              <label>目标链接</label>
+              <input type="url" class="input" id="annUrlTarget" placeholder="https://...">
+            </div>
+          </div>
+          <div class="props-section">
+            <div class="props-section-title">样式</div>
+            <div class="props-field">
+              <label>颜色</label>
+              <div class="color-input-wrap" id="annColorWrap">
+                <input type="color" id="annColor" value="#6366f1">
+                <span id="annColorHex">#6366f1</span>
+              </div>
+            </div>
+            <div class="props-field" id="sizeSection">
+              <label>大小</label>
+              <div class="size-grid">
+                <div class="size-btn" data-size="sm">小</div>
+                <div class="size-btn active" data-size="md">中</div>
+                <div class="size-btn" data-size="lg">大</div>
+              </div>
+            </div>
+          </div>
+          <div class="props-field" style="margin-top:8px">
+            <button class="btn btn-sm btn-danger w-full" id="deleteAnnBtn">🗑 删除此标注</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step Panel -->
+      <div id="panelStep" class="hidden">
+        <div class="props-section">
+          <div class="props-section-title">步骤信息</div>
+          <div class="props-field">
+            <label>步骤标题</label>
+            <input type="text" class="input" id="stepTitle" placeholder="步骤标题">
+          </div>
+        </div>
+        <div class="props-section">
+          <div class="props-section-title">🎙 语音旁白</div>
+          <div class="toggle-wrap">
+            <label><input type="checkbox" id="voiceEnabled"><span class="toggle"></span></label>
+            <span style="font-size:0.82rem;color:var(--gray-700)">启用语音旁白</span>
+          </div>
+          <div class="voiceover-controls" id="voiceoverControls" style="display:none;margin-top:8px;">
+            <div class="props-field">
+              <label>旁白文字</label>
+              <textarea class="textarea" id="voiceText" placeholder="在此输入旁白文字，或点击 AI 生成..."></textarea>
+            </div>
+            <div class="props-field">
+              <label>语言 / 语音</label>
+              <select class="select" id="voiceLang">
+                <option value="zh-CN">中文（普通话）</option>
+                <option value="zh-TW">中文（台湾）</option>
+                <option value="en-US">英文（美式）</option>
+                <option value="en-GB">英文（英式）</option>
+              </select>
+            </div>
+            <div class="voice-playback">
+              <button class="voice-btn" id="voicePlayBtn" title="播放">▶</button>
+              <button class="voice-btn" id="voiceStopBtn" title="停止">■</button>
+              <button class="btn btn-xs btn-secondary" id="aiVoiceTextBtn">🤖 AI生成</button>
+            </div>
+          </div>
+        </div>
+        <div class="props-section">
+          <div class="props-section-title">替换图片</div>
+          <label class="upload-area" style="padding:12px;" id="replaceImageArea">
+            <input type="file" id="replaceImageInput" accept="image/*" style="display:none">
+            <div style="font-size:0.82rem">📁 点击替换当前截图</div>
+          </label>
+        </div>
+        <div class="props-section" style="margin-top:8px">
+          <button class="btn btn-sm btn-danger w-full" id="deleteStepBtn">🗑 删除此步骤</button>
+        </div>
+      </div>
+
+      <!-- Demo Panel -->
+      <div id="panelDemo" class="hidden">
+        <div class="props-section">
+          <div class="props-section-title">品牌设置</div>
+          <div class="props-field">
+            <label>主题色</label>
+            <div class="color-input-wrap" id="brandColorWrap">
+              <input type="color" id="brandColor" value="#6366f1">
+              <span id="brandColorHex">#6366f1</span>
+            </div>
+          </div>
+          <div class="props-field">
+            <label>下一步按钮文字</label>
+            <input type="text" class="input" id="brandNextBtn" placeholder="下一步" value="下一步">
+          </div>
+          <div class="props-field">
+            <label>结尾 CTA 文字</label>
+            <input type="text" class="input" id="brandCtaText" placeholder="立即体验">
+          </div>
+          <div class="props-field">
+            <label>结尾 CTA 链接</label>
+            <input type="url" class="input" id="brandCtaUrl" placeholder="https://...">
+          </div>
+        </div>
+        <div class="props-section">
+          <div class="props-section-title">显示设置</div>
+          <div class="toggle-wrap" style="margin-bottom:8px">
+            <label><input type="checkbox" id="showBranding" checked><span class="toggle"></span></label>
+            <span style="font-size:0.82rem;color:var(--gray-700)">显示"由演示Demo创建"</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AI Panel -->
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-panel-header">
+    <div class="ai-panel-title">
+      <span>🤖</span><span>AI 助手</span>
+      <span class="ai-badge">AI</span>
+    </div>
+    <button class="btn btn-icon btn-sm btn-ghost" id="closeAiPanel">✕</button>
+  </div>
+  <div class="ai-panel-body">
+    <div class="props-section-title" style="margin-bottom:10px">为当前步骤生成</div>
+    <div class="ai-feature-card" id="aiAutoAnnotate">
+      <h4>🎯 AI 自动生成标注</h4>
+      <p>AI 识别当前截图内容，自动添加热点标注和说明文字</p>
+    </div>
+    <div class="ai-feature-card" id="aiGenerateVoice">
+      <h4>🎙 AI 生成语音文案</h4>
+      <p>根据标注内容自动生成流畅的语音旁白文字</p>
+    </div>
+    <div class="ai-feature-card" id="aiTranslate">
+      <h4>🌐 翻译为英文</h4>
+      <p>将当前步骤所有标注文字翻译为英文版本</p>
+    </div>
+    <div class="ai-feature-card" id="aiRedact">
+      <h4>🔒 数据脱敏</h4>
+      <p>自动模糊截图中可能存在的敏感信息（邮箱、手机号等）</p>
+    </div>
+    <div class="divider" style="margin:12px 0"></div>
+    <div class="props-section-title" style="margin-bottom:10px">AI 语气风格</div>
+    <div class="radio-group" id="aiToneGroup">
+      <div class="radio-btn"><input type="radio" name="aiTone" value="conversational" id="toneCon" checked><label for="toneCon">💬 对话</label></div>
+      <div class="radio-btn"><input type="radio" name="aiTone" value="technical" id="toneTech"><label for="toneTech">⚙ 技术</label></div>
+      <div class="radio-btn"><input type="radio" name="aiTone" value="executive" id="toneExec"><label for="toneExec">📊 高管</label></div>
+    </div>
+  </div>
+</div>
+
+<!-- Publish/Share Modal -->
+<div class="modal-overlay" id="publishModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📤 发布 &amp; 分享</span>
+      <button class="btn btn-icon btn-ghost btn-sm" onclick="closeModal('publishModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="tabs" style="margin-bottom:16px">
+        <div class="tab active" data-modal-tab="share">分享链接</div>
+        <div class="tab" data-modal-tab="embed">嵌入代码</div>
+        <div class="tab" data-modal-tab="export">导出 HTML</div>
+      </div>
+      <div id="shareTabContent">
+        <p style="font-size:0.85rem;margin-bottom:12px;color:var(--gray-600)">通过以下链接分享您的演示</p>
+        <div class="share-link-box">
+          <span id="shareUrl">正在生成...</span>
+          <button class="btn btn-sm btn-primary" id="copyShareBtn">复制</button>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:var(--gray-50);border-radius:var(--radius);font-size:0.82rem;color:var(--gray-600)">
+          💡 链接可直接在浏览器中打开，无需登录即可查看
+        </div>
+      </div>
+      <div id="embedTabContent" class="hidden">
+        <p style="font-size:0.85rem;margin-bottom:8px;color:var(--gray-600)">将以下代码嵌入到您的网站</p>
+        <div class="embed-code" id="embedCode"></div>
+        <button class="btn btn-sm btn-secondary w-full" style="margin-top:8px" id="copyEmbedBtn">复制嵌入代码</button>
+      </div>
+      <div id="exportTabContent" class="hidden">
+        <p style="font-size:0.85rem;margin-bottom:12px;color:var(--gray-600)">导出为独立 HTML 文件，可部署到任何服务器</p>
+        <button class="btn btn-primary w-full" id="exportHtmlBtn">⬇ 下载 HTML 文件</button>
+        <p style="font-size:0.75rem;color:var(--gray-400);margin-top:8px;text-align:center">文件包含所有图片数据，无需服务器支持</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload file hidden input (for add step) -->
+<input type="file" id="globalUploadInput" accept="image/*" multiple style="display:none">
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script src="js/db.js"></script>
+<script>
+// ===================== STATE =====================
+const state = {
+  demo: null,
+  currentStepIdx: -1,
+  selectedAnnId: null,
+  activeTool: 'select',
+  isDirty: false,
+  history: [],
+  historyIdx: -1,
+  isDrawing: false,
+  drawStart: null,
+  voicePlaying: false,
+  aiPanelOpen: false,
+};
+
+// ===================== DOM REFS =====================
+const $ = id => document.getElementById(id);
+const canvasContainer = $('canvasContainer');
+const canvasImage = $('canvasImage');
+const canvasEmpty = $('canvasEmpty');
+const annotationsLayer = $('annotationsLayer');
+const stepsList = $('stepsList');
+
+// ===================== INIT =====================
+TTSEngine.init();
+
+async function init() {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if (id) {
+    state.demo = await DemoDB.get(id);
+  }
+  if (!state.demo) {
+    state.demo = createDemo();
+    await DemoDB.save(state.demo);
+    history.replaceState({}, '', `?id=${state.demo.id}`);
+  }
+  $('demoTitle').value = state.demo.title;
+  $('brandColor').value = state.demo.branding.primaryColor;
+  $('brandColorHex').textContent = state.demo.branding.primaryColor;
+  $('brandNextBtn').value = state.demo.branding.nextButtonText;
+  $('brandCtaText').value = state.demo.branding.ctaText;
+  $('brandCtaUrl').value = state.demo.branding.ctaUrl;
+  renderStepsList();
+  if (state.demo.steps.length > 0) selectStep(0);
+  pushHistory();
+}
+
+// ===================== STEP RENDERING =====================
+function renderStepsList() {
+  const steps = state.demo.steps;
+  $('stepCountLabel').textContent = `${steps.length} 步`;
+  stepsList.innerHTML = '';
+  steps.forEach((step, i) => {
+    const div = document.createElement('div');
+    div.className = `step-thumb${i === state.currentStepIdx ? ' active' : ''}`;
+    div.dataset.idx = i;
+    div.draggable = true;
+    div.innerHTML = `
+      <div class="step-thumb-img-placeholder" id="thumbPlaceholder${i}">
+        ${step.imageDataUrl ? `<img src="${step.imageDataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:4px 4px 0 0;">` : '🖼'}
+      </div>
+      <div class="step-thumb-label">
+        <div style="display:flex;align-items:center;gap:5px;overflow:hidden">
+          <span class="step-num">${i + 1}</span>
+          <span style="font-size:0.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:90px">${step.title || `步骤 ${i+1}`}</span>
+        </div>
+        <span class="step-ann-count">${step.annotations.length} 标</span>
+      </div>
+      <div class="step-actions">
+        <div class="step-action-btn" data-action="duplicate" data-idx="${i}" title="复制">⎘</div>
+        <div class="step-action-btn" data-action="delete" data-idx="${i}" title="删除">✕</div>
+      </div>`;
+    div.addEventListener('click', e => {
+      if (e.target.closest('.step-action-btn')) return;
+      selectStep(i);
+    });
+    setupStepDrag(div, i);
+    stepsList.appendChild(div);
+  });
+}
+
+function setupStepDrag(el, idx) {
+  el.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', idx);
+    el.style.opacity = '0.5';
+  });
+  el.addEventListener('dragend', () => { el.style.opacity = ''; });
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+  el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    el.classList.remove('drag-over');
+    const from = parseInt(e.dataTransfer.getData('text/plain'));
+    const to = idx;
+    if (from !== to) {
+      const steps = state.demo.steps;
+      const [moved] = steps.splice(from, 1);
+      steps.splice(to, 0, moved);
+      const newIdx = to < state.currentStepIdx ? state.currentStepIdx + 1 :
+                     to >= state.currentStepIdx ? state.currentStepIdx : to;
+      state.currentStepIdx = from === state.currentStepIdx ? to : newIdx;
+      renderStepsList();
+      selectStep(state.currentStepIdx);
+      markDirty();
+    }
+  });
+}
+
+function selectStep(idx) {
+  if (idx < 0 || idx >= state.demo.steps.length) return;
+  state.currentStepIdx = idx;
+  state.selectedAnnId = null;
+  const step = state.demo.steps[idx];
+  renderStepsList();
+  if (step.imageDataUrl) {
+    canvasImage.src = step.imageDataUrl;
+    canvasImage.classList.remove('hidden');
+    canvasEmpty.classList.add('hidden');
+    canvasContainer.style.cursor = state.activeTool === 'select' ? 'default' : 'crosshair';
+  } else {
+    canvasImage.src = '';
+    canvasImage.classList.add('hidden');
+    canvasEmpty.classList.remove('hidden');
+    canvasContainer.style.cursor = 'default';
+  }
+  $('stepTitle').value = step.title || '';
+  $('voiceEnabled').checked = step.voiceover.enabled;
+  $('voiceText').value = step.voiceover.text || '';
+  $('voiceLang').value = step.voiceover.voice || 'zh-CN';
+  $('voiceoverControls').style.display = step.voiceover.enabled ? 'block' : 'none';
+  renderAnnotations();
+  showNoAnnSelected();
+}
+
+// ===================== ANNOTATION RENDERING =====================
+function renderAnnotations() {
+  annotationsLayer.innerHTML = '';
+  if (state.currentStepIdx < 0) return;
+  const step = state.demo.steps[state.currentStepIdx];
+  if (!step) return;
+  const color = state.demo.branding.primaryColor;
+  const btnText = state.demo.branding.nextButtonText || '下一步';
+
+  step.annotations.forEach(ann => {
+    const el = createAnnotationEl(ann, color, btnText);
+    if (el) annotationsLayer.appendChild(el);
+  });
+}
+
+function createAnnotationEl(ann, brandColor, btnText) {
+  const color = ann.color || brandColor || '#6366f1';
+  const isSelected = ann.id === state.selectedAnnId;
+
+  if (ann.type === 'hotspot') {
+    const wrap = document.createElement('div');
+    wrap.className = `ann-hotspot${isSelected ? ' ann-selected' : ''}`;
+    wrap.dataset.annId = ann.id;
+    wrap.style.left = ann.x + '%';
+    wrap.style.top = ann.y + '%';
+    wrap.style.setProperty('--ann-color', color);
+    const sizeMap = { sm: '20px', md: '26px', lg: '34px' };
+    const sz = sizeMap[ann.size] || '26px';
+    wrap.innerHTML = `
+      <div class="hotspot-dot" style="width:${sz};height:${sz};">
+        <div class="hotspot-ring"></div>
+        <div class="hotspot-ring2"></div>
+      </div>
+      <div class="ann-popup pop-${ann.placement || 'bottom'}" style="display:${isSelected?'block':'none'}">
+        <div class="ann-popup-header">
+          <div class="ann-popup-title">${escHtml(ann.title)}</div>
+          ${ann.description ? `<div class="ann-popup-desc">${escHtml(ann.description)}</div>` : ''}
+        </div>
+        <div class="ann-popup-footer">
+          <span class="ann-popup-step"></span>
+          <button class="ann-popup-btn" style="background:${color}">${btnText} →</button>
+        </div>
+      </div>`;
+    setupAnnInteraction(wrap, ann);
+    return wrap;
+  }
+
+  if (ann.type === 'callout') {
+    const wrap = document.createElement('div');
+    wrap.className = `ann-callout${isSelected ? ' ann-selected' : ''}`;
+    wrap.dataset.annId = ann.id;
+    wrap.style.left = ann.x + '%';
+    wrap.style.top = ann.y + '%';
+    wrap.style.setProperty('--ann-color', color);
+    wrap.innerHTML = `
+      <div class="ann-popup pop-${ann.placement || 'bottom'}" style="display:block">
+        <div class="ann-popup-header">
+          <div class="ann-popup-title" style="color:${color}">${escHtml(ann.title)}</div>
+          ${ann.description ? `<div class="ann-popup-desc">${escHtml(ann.description)}</div>` : ''}
+        </div>
+        <div class="ann-popup-footer">
+          <span class="ann-popup-step"></span>
+          <button class="ann-popup-btn" style="background:${color}">${btnText} →</button>
+        </div>
+      </div>`;
+    setupAnnInteraction(wrap, ann);
+    return wrap;
+  }
+
+  if (ann.type === 'spotlight') {
+    const container = document.createElement('div');
+    container.innerHTML = `<div class="ann-spotlight" data-ann-id="${ann.id}" style="
+      left:${ann.x}%;top:${ann.y}%;
+      width:${ann.width || 20}%;height:${ann.height || 14}%;
+      border-color:${color};
+    "></div>`;
+    const wrap = container.firstChild;
+    if (isSelected) wrap.style.boxShadow = `0 0 0 9999px rgba(0,0,0,0.62), 0 0 0 3px ${color}`;
+    setupAnnInteraction(wrap, ann);
+    return wrap;
+  }
+
+  if (ann.type === 'backdrop') {
+    const wrap = document.createElement('div');
+    wrap.className = `ann-backdrop-cutout${isSelected ? ' ann-selected' : ''}`;
+    wrap.dataset.annId = ann.id;
+    wrap.style.left = ann.x + '%';
+    wrap.style.top = ann.y + '%';
+    wrap.style.width = (ann.width || 20) + '%';
+    wrap.style.height = (ann.height || 14) + '%';
+    setupAnnInteraction(wrap, ann);
+    // Also add the dark overlay
+    const backdrop = document.createElement('div');
+    backdrop.className = 'ann-backdrop';
+    backdrop.style.pointerEvents = 'none';
+    const frag = document.createDocumentFragment();
+    frag.appendChild(backdrop);
+    frag.appendChild(wrap);
+    const g = document.createElement('div');
+    g.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+    g.appendChild(backdrop.cloneNode());
+    g.appendChild(wrap);
+    return g;
+  }
+
+  if (ann.type === 'rectangle') {
+    const wrap = document.createElement('div');
+    wrap.className = `ann-rect${isSelected ? ' ann-selected' : ''}`;
+    wrap.dataset.annId = ann.id;
+    wrap.style.left = ann.x + '%';
+    wrap.style.top = ann.y + '%';
+    wrap.style.width = (ann.width || 20) + '%';
+    wrap.style.height = (ann.height || 14) + '%';
+    wrap.style.setProperty('--ann-color', color);
+    wrap.style.borderColor = color;
+    wrap.style.background = color + '12';
+    if (ann.title) wrap.innerHTML = `<div class="rect-label" style="background:${color}">${escHtml(ann.title)}</div>`;
+    setupAnnInteraction(wrap, ann);
+    return wrap;
+  }
+
+  if (ann.type === 'text') {
+    const wrap = document.createElement('div');
+    wrap.className = `ann-text${isSelected ? ' ann-selected' : ''}`;
+    wrap.dataset.annId = ann.id;
+    wrap.style.left = ann.x + '%';
+    wrap.style.top = ann.y + '%';
+    wrap.style.background = color;
+    wrap.style.setProperty('--ann-color', color);
+    wrap.textContent = ann.title || '文字标注';
+    setupAnnInteraction(wrap, ann);
+    return wrap;
+  }
+
+  if (ann.type === 'chapter') {
+    const wrap = document.createElement('div');
+    wrap.className = `ann-chapter${isSelected ? ' ann-selected' : ''}`;
+    wrap.dataset.annId = ann.id;
+    wrap.style.setProperty('--ann-color', color);
+    wrap.innerHTML = `
+      <div class="chapter-content">
+        <span class="chapter-num">CHAPTER</span>
+        <div class="chapter-title">${escHtml(ann.title)}</div>
+        ${ann.description ? `<div class="chapter-desc">${escHtml(ann.description)}</div>` : ''}
+      </div>`;
+    setupAnnInteraction(wrap, ann);
+    return wrap;
+  }
+
+  return null;
+}
+
+function setupAnnInteraction(el, ann) {
+  el.addEventListener('click', e => {
+    e.stopPropagation();
+    if (state.activeTool !== 'select') return;
+    selectAnnotation(ann.id);
+  });
+
+  // Make draggable
+  let isDragging = false, startX, startY, startAnnX, startAnnY;
+  el.addEventListener('mousedown', e => {
+    if (state.activeTool !== 'select') return;
+    if (e.target.closest('.ann-popup-btn')) return;
+    e.stopPropagation();
+    isDragging = false;
+    const rect = canvasContainer.getBoundingClientRect();
+    startX = e.clientX;
+    startY = e.clientY;
+    startAnnX = ann.x;
+    startAnnY = ann.y;
+
+    const onMove = ev => {
+      const dx = (ev.clientX - startX) / rect.width * 100;
+      const dy = (ev.clientY - startY) / rect.height * 100;
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) isDragging = true;
+      if (isDragging) {
+        ann.x = Math.max(0, Math.min(99, startAnnX + dx));
+        ann.y = Math.max(0, Math.min(99, startAnnY + dy));
+        el.style.left = ann.x + '%';
+        el.style.top = ann.y + '%';
+      }
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      if (isDragging) { markDirty(); autoSave(); }
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+function selectAnnotation(annId) {
+  state.selectedAnnId = annId;
+  renderAnnotations();
+  const step = state.demo.steps[state.currentStepIdx];
+  const ann = step?.annotations.find(a => a.id === annId);
+  if (!ann) { showNoAnnSelected(); return; }
+
+  $('noAnnSelected').classList.add('hidden');
+  $('annEditor').classList.remove('hidden');
+  $('annType').value = ann.type;
+  $('annTitle').value = ann.title || '';
+  $('annDesc').value = ann.description || '';
+  $('annColor').value = ann.color || '#6366f1';
+  $('annColorHex').textContent = ann.color || '#6366f1';
+  $('annAction').value = ann.action?.type || 'next';
+
+  document.querySelectorAll('.placement-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.placement === (ann.placement || 'bottom'));
+  });
+  document.querySelectorAll('.size-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.size === (ann.size || 'md'));
+  });
+
+  updateActionFields(ann.action?.type);
+  updateGotoOptions();
+  if (ann.action?.type === 'goto') $('annGotoTarget').value = ann.action.target;
+  if (ann.action?.type === 'url') $('annUrlTarget').value = ann.action.target || '';
+
+  // Show/hide placement based on type
+  const showPlacement = ['hotspot','callout'].includes(ann.type);
+  $('popupPosSection').style.display = showPlacement ? '' : 'none';
+  $('sizeSection').style.display = ann.type === 'hotspot' ? '' : 'none';
+
+  // Switch to annotation tab
+  switchPropsTab('annotation');
+}
+
+function showNoAnnSelected() {
+  $('noAnnSelected').classList.remove('hidden');
+  $('annEditor').classList.add('hidden');
+  state.selectedAnnId = null;
+}
+
+// ===================== CANVAS INTERACTION =====================
+canvasContainer.addEventListener('mousemove', e => {
+  if (state.activeTool === 'select') return;
+  const rect = canvasContainer.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  $('crosshairH').style.top = y + 'px';
+  $('crosshairV').style.left = x + 'px';
+});
+
+canvasContainer.addEventListener('mousedown', e => {
+  if (!canvasImage.src || canvasImage.classList.contains('hidden')) return;
+  if (state.activeTool === 'select') {
+    // Clicking on empty canvas → deselect
+    if (e.target === canvasContainer || e.target === annotationsLayer || e.target === canvasImage) {
+      showNoAnnSelected();
+    }
+    return;
+  }
+
+  const rect = canvasContainer.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width * 100;
+  const y = (e.clientY - rect.top) / rect.height * 100;
+  const tool = state.activeTool;
+
+  if (['spotlight','backdrop','rectangle'].includes(tool)) {
+    // Area-based: drag to define
+    state.isDrawing = true;
+    state.drawStart = { x, y };
+    const preview = document.createElement('div');
+    preview.id = 'drawPreview';
+    preview.style.cssText = `position:absolute;border:2px dashed var(--primary);background:rgba(99,102,241,0.08);
+      pointer-events:none;z-index:50;left:${x}%;top:${y}%;width:0;height:0;border-radius:6px;`;
+    annotationsLayer.appendChild(preview);
+
+    const onMove = ev => {
+      const cx = (ev.clientX - rect.left) / rect.width * 100;
+      const cy = (ev.clientY - rect.top) / rect.height * 100;
+      const lx = Math.min(x, cx), ly = Math.min(y, cy);
+      const w = Math.abs(cx - x), h = Math.abs(cy - y);
+      preview.style.left = lx + '%';
+      preview.style.top = ly + '%';
+      preview.style.width = w + '%';
+      preview.style.height = h + '%';
+    };
+    const onUp = ev => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      preview.remove();
+      state.isDrawing = false;
+      const cx = (ev.clientX - rect.left) / rect.width * 100;
+      const cy = (ev.clientY - rect.top) / rect.height * 100;
+      const lx = Math.min(x, cx), ly = Math.min(y, cy);
+      const w = Math.abs(cx - x), h = Math.abs(cy - y);
+      if (w < 2 || h < 2) return;
+      placeAnnotation(tool, lx, ly, { width: w, height: h });
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  } else {
+    // Point-based
+    placeAnnotation(tool, x, y);
+  }
+});
+
+function placeAnnotation(type, x, y, opts = {}) {
+  if (state.currentStepIdx < 0) return;
+  const step = state.demo.steps[state.currentStepIdx];
+  const color = state.demo.branding.primaryColor;
+  const ann = createAnnotation(type, x, y, { color, ...opts });
+  step.annotations.push(ann);
+  renderAnnotations();
+  selectAnnotation(ann.id);
+  setActiveTool('select');
+  markDirty();
+  autoSave();
+  pushHistory();
+}
+
+// ===================== TOOLS =====================
+function setActiveTool(tool) {
+  state.activeTool = tool;
+  document.querySelectorAll('.tool-btn[data-tool]').forEach(b => {
+    b.classList.toggle('active', b.dataset.tool === tool);
+  });
+  canvasContainer.className = `canvas-container tool-${tool}`;
+}
+
+document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+  btn.addEventListener('click', () => setActiveTool(btn.dataset.tool));
+});
+
+// ===================== PROPERTY EDITORS =====================
+$('annTitle').addEventListener('input', () => updateSelectedAnn('title', $('annTitle').value));
+$('annDesc').addEventListener('input', () => updateSelectedAnn('description', $('annDesc').value));
+$('annType').addEventListener('change', () => {
+  updateSelectedAnn('type', $('annType').value);
+  const ann = getSelectedAnn();
+  if (!ann) return;
+  $('popupPosSection').style.display = ['hotspot','callout'].includes(ann.type) ? '' : 'none';
+  $('sizeSection').style.display = ann.type === 'hotspot' ? '' : 'none';
+});
+$('annColor').addEventListener('input', () => {
+  const v = $('annColor').value;
+  $('annColorHex').textContent = v;
+  updateSelectedAnn('color', v);
+});
+$('annAction').addEventListener('change', () => {
+  const v = $('annAction').value;
+  updateSelectedAnn('action', { type: v, target: null });
+  updateActionFields(v);
+});
+$('annGotoTarget').addEventListener('change', () => {
+  const ann = getSelectedAnn();
+  if (ann) ann.action = { type: 'goto', target: parseInt($('annGotoTarget').value) };
+  markDirty();
+});
+$('annUrlTarget').addEventListener('input', () => {
+  const ann = getSelectedAnn();
+  if (ann) ann.action = { type: 'url', target: $('annUrlTarget').value };
+  markDirty();
+});
+document.querySelectorAll('.placement-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    updateSelectedAnn('placement', b.dataset.placement);
+    document.querySelectorAll('.placement-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  });
+});
+document.querySelectorAll('.size-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    updateSelectedAnn('size', b.dataset.size);
+    document.querySelectorAll('.size-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  });
+});
+$('deleteAnnBtn').addEventListener('click', () => {
+  if (!state.selectedAnnId) return;
+  const step = state.demo.steps[state.currentStepIdx];
+  step.annotations = step.annotations.filter(a => a.id !== state.selectedAnnId);
+  state.selectedAnnId = null;
+  renderAnnotations();
+  showNoAnnSelected();
+  markDirty();
+  autoSave();
+  pushHistory();
+});
+
+function updateActionFields(type) {
+  $('gotoField').classList.toggle('hidden', type !== 'goto');
+  $('urlField').classList.toggle('hidden', type !== 'url');
+}
+function updateGotoOptions() {
+  const sel = $('annGotoTarget');
+  sel.innerHTML = '';
+  state.demo.steps.forEach((s, i) => {
+    if (i !== state.currentStepIdx) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `步骤 ${i + 1}: ${s.title || ''}`;
+      sel.appendChild(opt);
+    }
+  });
+}
+
+function getSelectedAnn() {
+  if (!state.selectedAnnId || state.currentStepIdx < 0) return null;
+  return state.demo.steps[state.currentStepIdx]?.annotations.find(a => a.id === state.selectedAnnId);
+}
+function updateSelectedAnn(key, val) {
+  const ann = getSelectedAnn();
+  if (!ann) return;
+  ann[key] = val;
+  renderAnnotations();
+  markDirty();
+  autoSave();
+}
+
+// ===================== STEP TITLE & STEP SETTINGS =====================
+$('stepTitle').addEventListener('input', () => {
+  if (state.currentStepIdx < 0) return;
+  state.demo.steps[state.currentStepIdx].title = $('stepTitle').value;
+  renderStepsList();
+  markDirty();
+  autoSave();
+});
+$('voiceEnabled').addEventListener('change', () => {
+  if (state.currentStepIdx < 0) return;
+  const step = state.demo.steps[state.currentStepIdx];
+  step.voiceover.enabled = $('voiceEnabled').checked;
+  $('voiceoverControls').style.display = step.voiceover.enabled ? 'block' : 'none';
+  markDirty();
+  autoSave();
+});
+$('voiceText').addEventListener('input', () => {
+  if (state.currentStepIdx < 0) return;
+  state.demo.steps[state.currentStepIdx].voiceover.text = $('voiceText').value;
+  markDirty();
+});
+$('voiceLang').addEventListener('change', () => {
+  if (state.currentStepIdx < 0) return;
+  state.demo.steps[state.currentStepIdx].voiceover.voice = $('voiceLang').value;
+  markDirty();
+});
+$('voicePlayBtn').addEventListener('click', () => {
+  const step = state.demo.steps[state.currentStepIdx];
+  const text = $('voiceText').value || step.title;
+  if (!text) return;
+  TTSEngine.speak(text, {
+    lang: $('voiceLang').value,
+    onEnd: () => { $('voicePlayBtn').classList.remove('playing'); $('voicePlayBtn').textContent = '▶'; }
+  });
+  $('voicePlayBtn').classList.add('playing');
+  $('voicePlayBtn').textContent = '⏸';
+});
+$('voiceStopBtn').addEventListener('click', () => {
+  TTSEngine.stop();
+  $('voicePlayBtn').classList.remove('playing');
+  $('voicePlayBtn').textContent = '▶';
+});
+$('aiVoiceTextBtn').addEventListener('click', () => {
+  if (state.currentStepIdx < 0) return;
+  const step = state.demo.steps[state.currentStepIdx];
+  const text = AIAnnotator.generateVoiceoverText(step);
+  $('voiceText').value = text;
+  step.voiceover.text = text;
+  markDirty();
+  showToast('AI 已生成语音文案', 'success');
+});
+$('deleteStepBtn').addEventListener('click', () => {
+  if (state.currentStepIdx < 0) return;
+  if (state.demo.steps.length <= 1) { showToast('至少保留一个步骤', 'warning'); return; }
+  if (!confirm('确定删除此步骤？')) return;
+  state.demo.steps.splice(state.currentStepIdx, 1);
+  const newIdx = Math.min(state.currentStepIdx, state.demo.steps.length - 1);
+  state.currentStepIdx = -1;
+  renderStepsList();
+  selectStep(newIdx);
+  markDirty();
+  autoSave();
+  pushHistory();
+});
+
+// ===================== DEMO SETTINGS =====================
+$('demoTitle').addEventListener('input', () => {
+  state.demo.title = $('demoTitle').value;
+  markDirty();
+  autoSave();
+});
+$('brandColor').addEventListener('input', () => {
+  const v = $('brandColor').value;
+  $('brandColorHex').textContent = v;
+  state.demo.branding.primaryColor = v;
+  renderAnnotations();
+  markDirty();
+});
+$('brandNextBtn').addEventListener('input', () => {
+  state.demo.branding.nextButtonText = $('brandNextBtn').value || '下一步';
+  renderAnnotations();
+  markDirty();
+});
+$('brandCtaText').addEventListener('input', () => {
+  state.demo.branding.ctaText = $('brandCtaText').value;
+  markDirty();
+});
+$('brandCtaUrl').addEventListener('input', () => {
+  state.demo.branding.ctaUrl = $('brandCtaUrl').value;
+  markDirty();
+});
+$('showBranding').addEventListener('change', () => {
+  state.demo.branding.showBranding = $('showBranding').checked;
+  markDirty();
+});
+
+// ===================== PROPS TABS =====================
+function switchPropsTab(name) {
+  document.querySelectorAll('.tabs .tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.panel === name);
+  });
+  ['annotation','step','demo'].forEach(p => {
+    $(`panel${p.charAt(0).toUpperCase() + p.slice(1)}`).classList.toggle('hidden', p !== name);
+  });
+}
+document.querySelectorAll('.tabs .tab[data-panel]').forEach(t => {
+  t.addEventListener('click', () => switchPropsTab(t.dataset.panel));
+});
+
+// ===================== STEP ACTIONS =====================
+$('addStepBtn').addEventListener('click', () => {
+  $('globalUploadInput').click();
+});
+$('globalUploadInput').addEventListener('change', e => {
+  handleImageFiles(Array.from(e.target.files));
+  e.target.value = '';
+});
+$('uploadInput').addEventListener('change', e => {
+  handleImageFiles(Array.from(e.target.files));
+  e.target.value = '';
+});
+$('replaceImageInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file || state.currentStepIdx < 0) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    state.demo.steps[state.currentStepIdx].imageDataUrl = ev.target.result;
+    selectStep(state.currentStepIdx);
+    markDirty();
+    autoSave();
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+function handleImageFiles(files) {
+  if (!files.length) return;
+  let count = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const step = createStep(state.demo.steps.length);
+      step.imageDataUrl = ev.target.result;
+      state.demo.steps.push(step);
+      count++;
+      if (count === files.length) {
+        renderStepsList();
+        selectStep(state.demo.steps.length - 1);
+        markDirty();
+        autoSave();
+        pushHistory();
+        showToast(`已添加 ${files.length} 个步骤`, 'success');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Drag-drop upload on canvas empty area
+const canvasScroll = $('canvasScroll');
+canvasScroll.addEventListener('dragover', e => {
+  if (!canvasImage.classList.contains('hidden')) return;
+  e.preventDefault();
+  $('uploadArea').classList.add('drag');
+});
+canvasScroll.addEventListener('dragleave', () => $('uploadArea').classList.remove('drag'));
+canvasScroll.addEventListener('drop', e => {
+  e.preventDefault();
+  $('uploadArea').classList.remove('drag');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  if (files.length) handleImageFiles(files);
+});
+
+// Paste image
+document.addEventListener('paste', e => {
+  const items = Array.from(e.clipboardData?.items || []);
+  const imageItem = items.find(i => i.type.startsWith('image/'));
+  if (imageItem) {
+    const file = imageItem.getAsFile();
+    handleImageFiles([file]);
+  }
+});
+
+// Step action buttons
+stepsList.addEventListener('click', e => {
+  const btn = e.target.closest('.step-action-btn');
+  if (!btn) return;
+  e.stopPropagation();
+  const action = btn.dataset.action;
+  const idx = parseInt(btn.dataset.idx);
+  if (action === 'delete') {
+    if (state.demo.steps.length <= 1) { showToast('至少保留一个步骤', 'warning'); return; }
+    if (!confirm('删除此步骤？')) return;
+    state.demo.steps.splice(idx, 1);
+    const newIdx = Math.min(idx, state.demo.steps.length - 1);
+    state.currentStepIdx = -1;
+    renderStepsList();
+    selectStep(newIdx);
+    markDirty();
+    autoSave();
+    pushHistory();
+  } else if (action === 'duplicate') {
+    const copy = JSON.parse(JSON.stringify(state.demo.steps[idx]));
+    copy.id = genId();
+    copy.title += ' (副本)';
+    state.demo.steps.splice(idx + 1, 0, copy);
+    renderStepsList();
+    selectStep(idx + 1);
+    markDirty();
+    autoSave();
+    pushHistory();
+  }
+});
+
+$('clearAnnotationsBtn').addEventListener('click', () => {
+  if (state.currentStepIdx < 0) return;
+  if (!confirm('清空当前步骤所有标注？')) return;
+  state.demo.steps[state.currentStepIdx].annotations = [];
+  renderAnnotations();
+  showNoAnnSelected();
+  markDirty();
+  autoSave();
+  pushHistory();
+});
+
+// ===================== SAVE / AUTO SAVE =====================
+let saveTimer = null;
+function markDirty() {
+  state.isDirty = true;
+  $('saveStatus').innerHTML = '<span style="color:var(--warning)">●</span><span>未保存</span>';
+  $('saveStatus').className = 'save-status';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(autoSave, 1500);
+}
+async function autoSave() {
+  if (!state.demo) return;
+  await DemoDB.save(state.demo);
+  state.isDirty = false;
+  $('saveStatus').innerHTML = '<span>●</span><span>已保存</span>';
+  $('saveStatus').className = 'save-status saved';
+}
+
+// ===================== UNDO / REDO =====================
+function pushHistory() {
+  const snapshot = JSON.stringify(state.demo);
+  if (state.historyIdx < state.history.length - 1) {
+    state.history = state.history.slice(0, state.historyIdx + 1);
+  }
+  state.history.push(snapshot);
+  if (state.history.length > 30) state.history.shift();
+  state.historyIdx = state.history.length - 1;
+  updateUndoRedoBtns();
+}
+function updateUndoRedoBtns() {
+  $('undoBtn').disabled = state.historyIdx <= 0;
+  $('redoBtn').disabled = state.historyIdx >= state.history.length - 1;
+}
+async function undo() {
+  if (state.historyIdx <= 0) return;
+  state.historyIdx--;
+  state.demo = JSON.parse(state.history[state.historyIdx]);
+  await DemoDB.save(state.demo);
+  renderStepsList();
+  selectStep(Math.min(state.currentStepIdx, state.demo.steps.length - 1));
+  updateUndoRedoBtns();
+  showToast('已撤销', 'default');
+}
+async function redo() {
+  if (state.historyIdx >= state.history.length - 1) return;
+  state.historyIdx++;
+  state.demo = JSON.parse(state.history[state.historyIdx]);
+  await DemoDB.save(state.demo);
+  renderStepsList();
+  selectStep(Math.min(state.currentStepIdx, state.demo.steps.length - 1));
+  updateUndoRedoBtns();
+  showToast('已重做', 'default');
+}
+$('undoBtn').addEventListener('click', undo);
+$('redoBtn').addEventListener('click', redo);
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (state.selectedAnnId && document.activeElement === document.body) {
+      const step = state.demo.steps[state.currentStepIdx];
+      if (step) {
+        step.annotations = step.annotations.filter(a => a.id !== state.selectedAnnId);
+        renderAnnotations();
+        showNoAnnSelected();
+        markDirty();
+        autoSave();
+      }
+    }
+  }
+  if (e.key === 'Escape') { setActiveTool('select'); showNoAnnSelected(); }
+});
+
+// ===================== PREVIEW =====================
+$('previewBtn').addEventListener('click', async () => {
+  await autoSave();
+  window.open(`player.html?id=${state.demo.id}&preview=1`, '_blank');
+});
+
+// ===================== AI PANEL =====================
+$('aiBtn').addEventListener('click', () => {
+  const panel = $('aiPanel');
+  state.aiPanelOpen = !state.aiPanelOpen;
+  panel.classList.toggle('open', state.aiPanelOpen);
+});
+$('closeAiPanel').addEventListener('click', () => {
+  state.aiPanelOpen = false;
+  $('aiPanel').classList.remove('open');
+});
+
+$('aiAutoAnnotate').addEventListener('click', async () => {
+  if (state.currentStepIdx < 0) { showToast('请先选择一个步骤', 'warning'); return; }
+  const step = state.demo.steps[state.currentStepIdx];
+  const tone = document.querySelector('input[name="aiTone"]:checked')?.value || 'conversational';
+  showToast('AI 正在生成标注...', 'default');
+
+  // Simulate AI: add smart annotations at predefined positions
+  const positions = [
+    { x: 20, y: 25 }, { x: 70, y: 40 }, { x: 45, y: 65 },
+  ];
+  const generated = positions.slice(0, Math.min(3, 3 - step.annotations.length + 1));
+  generated.forEach((pos, i) => {
+    const ann = createAnnotation('hotspot', pos.x, pos.y, {
+      title: AIAnnotator.generateStepText(step.title || `步骤 ${state.currentStepIdx + 1}`, '', tone),
+      description: i === 0 ? '这是核心功能区域，点击继续了解' : '点击下方按钮前往下一步',
+      color: state.demo.branding.primaryColor,
+    });
+    step.annotations.push(ann);
+  });
+  renderAnnotations();
+  renderStepsList();
+  markDirty();
+  autoSave();
+  pushHistory();
+  showToast(`AI 已生成 ${generated.length} 个标注`, 'success');
+});
+
+$('aiGenerateVoice').addEventListener('click', () => {
+  if (state.currentStepIdx < 0) { showToast('请先选择一个步骤', 'warning'); return; }
+  const step = state.demo.steps[state.currentStepIdx];
+  const text = AIAnnotator.generateVoiceoverText(step);
+  step.voiceover.text = text;
+  step.voiceover.enabled = true;
+  $('voiceText').value = text;
+  $('voiceEnabled').checked = true;
+  $('voiceoverControls').style.display = 'block';
+  switchPropsTab('step');
+  markDirty();
+  autoSave();
+  showToast('AI 已生成语音文案', 'success');
+});
+
+$('aiTranslate').addEventListener('click', () => {
+  if (state.currentStepIdx < 0) { showToast('请先选择一个步骤', 'warning'); return; }
+  const step = state.demo.steps[state.currentStepIdx];
+  // Simulate translation (in real product would call translation API)
+  const translateMap = {
+    '点击查看': 'Click to view',
+    '在这里添加说明文字': 'Add description here',
+    '注意这里': 'Note here',
+    '下一步': 'Next',
+    '聚焦区域': 'Spotlight area',
+    '关注这个区域的内容': 'Focus on this area',
+  };
+  step.annotations.forEach(ann => {
+    ann.title = translateMap[ann.title] || ann.title;
+    ann.description = translateMap[ann.description] || ann.description;
+  });
+  renderAnnotations();
+  markDirty();
+  autoSave();
+  showToast('已翻译为英文（模拟）', 'success');
+});
+
+$('aiRedact').addEventListener('click', () => {
+  showToast('数据脱敏已应用（模拟：需接入后端 Canvas API）', 'default');
+});
+
+// ===================== PUBLISH MODAL =====================
+$('publishBtn').addEventListener('click', async () => {
+  await autoSave();
+  state.demo.isPublished = true;
+  await DemoDB.save(state.demo);
+  const url = `${location.origin}/player.html?id=${state.demo.id}`;
+  $('shareUrl').textContent = url;
+  $('embedCode').textContent = `<iframe src="${url}" width="100%" height="600" frameborder="0" allowfullscreen></iframe>`;
+  openModal('publishModal');
+  // Default to share tab
+  switchModalTab('share');
+});
+
+document.querySelectorAll('[data-modal-tab]').forEach(t => {
+  t.addEventListener('click', () => switchModalTab(t.dataset.modalTab));
+});
+function switchModalTab(name) {
+  document.querySelectorAll('[data-modal-tab]').forEach(t => {
+    t.classList.toggle('active', t.dataset.modalTab === name);
+  });
+  ['share','embed','export'].forEach(n => {
+    $(`${n}TabContent`).classList.toggle('hidden', n !== name);
+  });
+}
+
+$('copyShareBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText($('shareUrl').textContent).then(() => showToast('链接已复制', 'success'));
+});
+$('copyEmbedBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText($('embedCode').textContent).then(() => showToast('嵌入代码已复制', 'success'));
+});
+$('exportHtmlBtn').addEventListener('click', exportHtml);
+
+function exportHtml() {
+  const demo = state.demo;
+  const html = generateStandaloneHtml(demo);
+  const blob = new Blob([html], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${demo.title || '演示'}.html`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('HTML 文件已导出', 'success');
+}
+
+function generateStandaloneHtml(demo) {
+  const color = demo.branding.primaryColor || '#6366f1';
+  const steps = demo.steps;
+  const stepsJson = JSON.stringify(steps);
+  return `<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escHtml(demo.title)}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;background:#0f172a;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.player{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4);width:100%;max-width:900px}
+.player-nav{background:${color};padding:12px 20px;display:flex;align-items:center;justify-content:space-between}
+.player-title{color:#fff;font-weight:700;font-size:0.95rem}
+.player-progress{color:rgba(255,255,255,0.7);font-size:0.82rem}
+.canvas{position:relative;overflow:hidden;cursor:pointer}
+.canvas img{display:block;width:100%;height:auto}
+.ann-hotspot{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:20}
+.hotspot-dot{width:26px;height:26px;background:${color};border-radius:50%;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25);position:relative;z-index:2}
+@keyframes hp{0%{transform:scale(.8);opacity:.9}100%{transform:scale(2);opacity:0}}
+.hotspot-ring,.hotspot-ring2{position:absolute;inset:-6px;border:2.5px solid ${color};border-radius:50%;animation:hp 2s ease-out infinite;pointer-events:none}
+.hotspot-ring2{inset:-12px;border-width:1.5px;animation-delay:.5s}
+.popup{position:absolute;min-width:220px;background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);padding:0;z-index:30;display:none}
+.popup.visible{display:block}
+.popup.pop-bottom{top:calc(100% + 14px);left:50%;transform:translateX(-50%)}
+.popup.pop-top{bottom:calc(100% + 14px);left:50%;transform:translateX(-50%)}
+.popup.pop-right{left:calc(100% + 14px);top:50%;transform:translateY(-50%)}
+.popup.pop-left{right:calc(100% + 14px);top:50%;transform:translateY(-50%)}
+.popup::before{content:'';position:absolute;width:12px;height:12px;background:#fff;transform:rotate(45deg)}
+.popup.pop-bottom::before{top:-6px;left:calc(50% - 6px)}
+.popup.pop-top::before{bottom:-6px;left:calc(50% - 6px)}
+.popup.pop-right::before{left:-6px;top:calc(50% - 6px)}
+.popup.pop-left::before{right:-6px;top:calc(50% - 6px)}
+.popup-h{padding:14px 16px 10px;border-bottom:1px solid #f1f5f9}
+.popup-title{font-size:.9rem;font-weight:700;color:#0f172a;margin-bottom:4px}
+.popup-desc{font-size:.82rem;color:#64748b;line-height:1.55}
+.popup-f{padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.popup-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;background:${color};color:#fff;font-size:.82rem;font-weight:600;cursor:pointer;border:none}
+.callout .popup{display:block!important}
+.ann-spotlight{position:absolute;border-radius:6px;box-shadow:0 0 0 9999px rgba(0,0,0,.62);border:2px solid rgba(255,255,255,.4);z-index:15;pointer-events:none}
+.ann-rect{position:absolute;border-radius:6px;border:2.5px solid ${color};background:${color}12;z-index:18;pointer-events:none}
+.ann-text{position:absolute;background:${color};color:#fff;padding:6px 12px;border-radius:8px;font-size:.82rem;font-weight:600;max-width:200px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.ann-chapter{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(99,102,241,.92),rgba(139,92,246,.92));z-index:25}
+.chapter-c{text-align:center;color:#fff;padding:40px}
+.chapter-n{display:inline-block;margin-bottom:12px;background:rgba(255,255,255,.2);border-radius:100px;padding:4px 16px;font-size:.8rem;font-weight:600}
+.chapter-t{font-size:2rem;font-weight:800;margin-bottom:12px}
+.chapter-d{opacity:.85;font-size:1rem}
+.controls{padding:16px 20px;display:flex;align-items:center;gap:12px;background:#f8fafc;border-top:1px solid #e2e8f0}
+.ctrl-btn{padding:9px 20px;border-radius:8px;font-size:.875rem;font-weight:600;cursor:pointer;border:none;transition:all .18s}
+.ctrl-prev{background:#e2e8f0;color:#475569}
+.ctrl-prev:hover{background:#cbd5e1}
+.ctrl-next{background:${color};color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.35)}
+.ctrl-next:hover{opacity:.88}
+.ctrl-step{font-size:.82rem;color:#64748b;flex:1;text-align:center}
+.prog-bar{height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;margin:0 20px 0}
+.prog-fill{height:100%;background:${color};border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.branding{padding:4px 20px 8px;text-align:right;font-size:.7rem;color:#94a3b8}
+.branding a{color:${color}}
+</style></head>
+<body>
+<div class="player">
+  <div class="player-nav">
+    <div class="player-title">${escHtml(demo.title)}</div>
+    <div class="player-progress" id="navProgress">1 / ${steps.length}</div>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:${steps.length?100/steps.length:0}%"></div></div>
+  <div class="canvas" id="canvas"><img id="canvasImg" src="" alt=""></div>
+  <div class="controls">
+    <button class="ctrl-btn ctrl-prev" id="prevBtn">← ${demo.branding.prevButtonText||'上一步'}</button>
+    <span class="ctrl-step" id="stepLabel">步骤 1 / ${steps.length}</span>
+    <button class="ctrl-btn ctrl-next" id="nextBtn">${demo.branding.nextButtonText||'下一步'} →</button>
+  </div>
+  ${demo.branding.showBranding?`<div class="branding">由 <a href="#" target="_blank">演示Demo</a> 创建</div>`:''}
+</div>
+<script>
+const steps=${stepsJson};
+const branding=${JSON.stringify(demo.branding)};
+let cur=0;
+function show(i){
+  if(i<0||i>=steps.length)return;
+  cur=i;
+  const step=steps[i];
+  const img=document.getElementById('canvasImg');
+  img.src=step.imageDataUrl||'';
+  const canvas=document.getElementById('canvas');
+  // Remove old annotations
+  Array.from(canvas.querySelectorAll('[data-ann]')).forEach(el=>el.remove());
+  // Render annotations
+  (step.annotations||[]).forEach(ann=>{
+    const el=renderAnn(ann);
+    if(el){el.setAttribute('data-ann','1');canvas.appendChild(el);}
+  });
+  document.getElementById('navProgress').textContent=(i+1)+' / '+steps.length;
+  document.getElementById('stepLabel').textContent='步骤 '+(i+1)+' / '+steps.length;
+  document.getElementById('progFill').style.width=((i+1)/steps.length*100)+'%';
+  document.getElementById('prevBtn').disabled=i===0;
+  document.getElementById('nextBtn').textContent=i===steps.length-1?(branding.ctaText||'完成'):(branding.nextButtonText||'下一步')+' →';
+}
+function renderAnn(ann){
+  const color=ann.color||branding.primaryColor||'#6366f1';
+  if(ann.type==='hotspot'){
+    const w=document.createElement('div');
+    w.className='ann-hotspot';w.style.left=ann.x+'%';w.style.top=ann.y+'%';w.style.setProperty('--ann-color',color);
+    const sz={sm:'20px',md:'26px',lg:'34px'}[ann.size]||'26px';
+    w.innerHTML='<div class="hotspot-dot" style="width:'+sz+';height:'+sz+'"><div class="hotspot-ring"></div><div class="hotspot-ring2"></div></div><div class="popup pop-'+(ann.placement||'bottom')+'"><div class="popup-h"><div class="popup-title">'+esc(ann.title)+'</div>'+(ann.description?'<div class="popup-desc">'+esc(ann.description)+'</div>':'')+'</div><div class="popup-f"><span></span><button class="popup-btn" style="background:'+color+'">'+esc(branding.nextButtonText||'下一步')+' →</button></div></div>';
+    w.querySelector('.hotspot-dot').onclick=function(e){e.stopPropagation();const p=w.querySelector('.popup');p.classList.toggle('visible');};
+    w.querySelector('.popup-btn').onclick=function(e){e.stopPropagation();handleAction(ann.action);};
+    return w;
+  }
+  if(ann.type==='callout'){
+    const w=document.createElement('div');w.className='ann-callout';w.style.left=ann.x+'%';w.style.top=ann.y+'%';
+    w.innerHTML='<div class="popup pop-'+(ann.placement||'bottom')+' visible"><div class="popup-h"><div class="popup-title" style="color:'+color+'">'+esc(ann.title)+'</div>'+(ann.description?'<div class="popup-desc">'+esc(ann.description)+'</div>':'')+'</div><div class="popup-f"><span></span><button class="popup-btn" style="background:'+color+'">'+esc(branding.nextButtonText||'下一步')+' →</button></div></div>';
+    w.querySelector('.popup-btn').onclick=function(e){e.stopPropagation();handleAction(ann.action);};
+    return w;
+  }
+  if(ann.type==='spotlight'){
+    const d=document.createElement('div');d.className='ann-spotlight';d.style.left=ann.x+'%';d.style.top=ann.y+'%';d.style.width=(ann.width||20)+'%';d.style.height=(ann.height||14)+'%';d.style.borderColor=color;return d;
+  }
+  if(ann.type==='rectangle'){
+    const d=document.createElement('div');d.className='ann-rect';d.style.left=ann.x+'%';d.style.top=ann.y+'%';d.style.width=(ann.width||20)+'%';d.style.height=(ann.height||14)+'%';d.style.borderColor=color;d.style.background=color+'12';return d;
+  }
+  if(ann.type==='text'){
+    const d=document.createElement('div');d.className='ann-text';d.style.left=ann.x+'%';d.style.top=ann.y+'%';d.style.background=color;d.textContent=ann.title;return d;
+  }
+  if(ann.type==='chapter'){
+    const d=document.createElement('div');d.className='ann-chapter';d.innerHTML='<div class="chapter-c"><span class="chapter-n">CHAPTER</span><div class="chapter-t">'+esc(ann.title)+'</div>'+(ann.description?'<div class="chapter-d">'+esc(ann.description)+'</div>':'')+'</div>';return d;
+  }
+  return null;
+}
+function handleAction(action){
+  if(!action||action.type==='next'){show(cur+1);}
+  else if(action.type==='goto'){show(action.target);}
+  else if(action.type==='url'&&action.target){window.open(action.target,'_blank');}
+  else{show(cur+1);}
+}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+document.getElementById('prevBtn').onclick=()=>show(cur-1);
+document.getElementById('nextBtn').onclick=()=>{
+  if(cur===steps.length-1&&branding.ctaUrl){window.open(branding.ctaUrl,'_blank');}
+  else{show(cur+1);}
+};
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')show(cur+1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')show(cur-1);
+});
+show(0);
+<\/script></body></html>`;
+}
+
+// ===================== MODAL HELPERS =====================
+function openModal(id) { $(`${id}`).classList.add('open'); }
+function closeModal(id) { $(`${id}`).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+// ===================== UTILITY =====================
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+
+// Start
+init();
+</script>
+</body>
+</html>

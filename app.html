@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>演示Demo — 管理后台</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    /* ===================== App Shell ===================== */
+    html, body { height: 100%; overflow: hidden; }
+    body { display: flex; background: var(--gray-50); }
+
+    /* ===================== Sidebar ===================== */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      height: 100vh;
+      background: #fff;
+      border-right: 1px solid var(--gray-100);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      z-index: 50;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      height: 62px;
+      border-bottom: 1px solid var(--gray-100);
+      flex-shrink: 0;
+    }
+    .sidebar-logo-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 1rem; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .sidebar-logo-text {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: -0.02em;
+    }
+    .sidebar-logo-badge {
+      margin-left: auto;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.03em;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 8px;
+      overflow-y: auto;
+    }
+    .sidebar-section-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--gray-400);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 8px 10px 4px;
+    }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: all var(--transition);
+      user-select: none;
+      position: relative;
+    }
+    .sidebar-item:hover {
+      background: var(--gray-50);
+      color: var(--gray-900);
+    }
+    .sidebar-item.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .sidebar-item.active .sidebar-item-icon {
+      color: var(--primary);
+    }
+    .sidebar-item-icon {
+      font-size: 1.05rem;
+      width: 22px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .sidebar-item-badge {
+      margin-left: auto;
+      background: var(--gray-100);
+      color: var(--gray-500);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      min-width: 20px;
+      text-align: center;
+    }
+    .sidebar-item.active .sidebar-item-badge {
+      background: rgba(99,102,241,0.15);
+      color: var(--primary);
+    }
+
+    .sidebar-footer {
+      padding: 8px 8px 16px;
+      border-top: 1px solid var(--gray-100);
+      flex-shrink: 0;
+    }
+
+    /* ===================== Main Area ===================== */
+    .main-wrapper {
+      margin-left: 220px;
+      flex: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ===================== Top Header ===================== */
+    .topbar {
+      height: 62px;
+      background: #fff;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .topbar-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.015em;
+      white-space: nowrap;
+    }
+    .topbar-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--gray-200);
+      flex-shrink: 0;
+    }
+    .topbar-search-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 320px;
+    }
+    .topbar-search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+      font-size: 0.85rem;
+      pointer-events: none;
+    }
+    .topbar-search {
+      width: 100%;
+      padding: 8px 12px 8px 32px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      color: var(--gray-800);
+      background: var(--gray-50);
+      transition: all var(--transition);
+      outline: none;
+    }
+    .topbar-search:focus {
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+    .topbar-search::placeholder { color: var(--gray-400); }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+
+    .sort-select {
+      padding: 8px 30px 8px 12px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 0.83rem;
+      font-weight: 500;
+      color: var(--gray-600);
+      background: var(--gray-50);
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 9px center;
+      cursor: pointer;
+      outline: none;
+      transition: all var(--transition);
+    }
+    .sort-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+
+    /* ===================== Content Area ===================== */
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px 40px;
+    }
+
+    /* ===================== Stats Row ===================== */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: box-shadow var(--transition), transform var(--transition);
+    }
+    .stat-card:hover {
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+    }
+    .stat-icon {
+      width: 42px; height: 42px;
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .stat-icon.purple { background: var(--primary-light); }
+    .stat-icon.blue { background: #e0f2fe; }
+    .stat-icon.green { background: #d1fae5; }
+    .stat-info { flex: 1; min-width: 0; }
+    .stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--gray-500);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .stat-trend {
+      font-size: 0.72rem;
+      color: var(--success);
+      font-weight: 600;
+      background: #d1fae5;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      white-space: nowrap;
+    }
+
+    /* ===================== Section Header ===================== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--gray-700);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-count {
+      background: var(--gray-100);
+      color: var(--gray-500);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+
+    /* ===================== Demo Grid ===================== */
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    /* ===================== Demo Card ===================== */
+    .demo-card {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      cursor: pointer;
+      transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
+      position: relative;
+    }
+    .demo-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-3px);
+      border-color: var(--gray-300);
+    }
+
+    /* Thumbnail */
+    .demo-thumb {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .demo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .demo-thumb-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .demo-thumb-placeholder-icon {
+      font-size: 2rem;
+      opacity: 0.35;
+    }
+    .demo-thumb-placeholder-text {
+      font-size: 0.72rem;
+      color: var(--gray-400);
+      font-weight: 500;
+    }
+
+    /* Gradient overlay on hover */
+    .demo-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 40%, rgba(15,23,42,0.75) 100%);
+      opacity: 0;
+      transition: opacity var(--transition);
+      display: flex;
+      align-items: flex-end;
+      padding: 12px;
+    }
+    .demo-card:hover .demo-thumb-overlay {
+      opacity: 1;
+    }
+
+    /* Hover action buttons in overlay */
+    .demo-hover-actions {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+    .demo-hover-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 7px 6px;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .demo-hover-btn.preview {
+      background: #fff;
+      color: var(--gray-800);
+    }
+    .demo-hover-btn.preview:hover {
+      background: var(--gray-100);
+    }
+    .demo-hover-btn.edit {
+      background: var(--primary);
+      color: #fff;
+    }
+    .demo-hover-btn.edit:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Step count badge on thumbnail */
+    .demo-step-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(15,23,42,0.65);
+      backdrop-filter: blur(4px);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .demo-step-badge-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+
+    /* Published badge */
+    .demo-published-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(16,185,129,0.9);
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.03em;
+    }
+
+    /* Card body */
+    .demo-card-body {
+      padding: 14px 16px 12px;
+    }
+    .demo-card-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 6px;
+    }
+    .demo-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .demo-card-date {
+      font-size: 0.75rem;
+      color: var(--gray-400);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .demo-card-views {
+      font-size: 0.72rem;
+      color: var(--gray-400);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    /* Card footer */
+    .demo-card-footer {
+      padding: 0 16px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-top: 1px solid var(--gray-100);
+      padding-top: 10px;
+    }
+    .demo-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 9px;
+      border-radius: var(--radius-sm);
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--gray-200);
+      background: #fff;
+      color: var(--gray-600);
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+    .demo-action-btn:hover {
+      background: var(--gray-50);
+      border-color: var(--gray-300);
+      color: var(--gray-900);
+    }
+    .demo-action-btn.primary-action {
+      background: var(--primary-light);
+      border-color: transparent;
+      color: var(--primary);
+    }
+    .demo-action-btn.primary-action:hover {
+      background: #c7d2fe;
+    }
+
+    /* More menu button */
+    .demo-more-btn {
+      margin-left: auto;
+      width: 28px; height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--gray-200);
+      background: #fff;
+      color: var(--gray-500);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .demo-more-btn:hover {
+      background: var(--gray-100);
+      color: var(--gray-900);
+    }
+
+    /* Context dropdown */
+    .card-dropdown {
+      position: absolute;
+      bottom: 48px;
+      right: 12px;
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      min-width: 168px;
+      z-index: 200;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(6px) scale(0.97);
+      transition: all 0.15s ease;
+    }
+    .card-dropdown.open {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0) scale(1);
+    }
+
+    /* ===================== Empty State ===================== */
+    .empty-state-wrap {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 72px 24px;
+      text-align: center;
+    }
+    .empty-state-illustration {
+      width: 96px;
+      height: 96px;
+      background: linear-gradient(135deg, var(--primary-light), #e0e7ff);
+      border-radius: var(--radius-2xl);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      margin: 0 auto 20px;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.15);
+    }
+    .empty-state-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--gray-800);
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .empty-state-desc {
+      font-size: 0.9rem;
+      color: var(--gray-500);
+      margin-bottom: 24px;
+      max-width: 320px;
+      line-height: 1.6;
+    }
+
+    /* ===================== Skeleton Cards ===================== */
+    .skeleton-card {
+      background: #fff;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .skeleton-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-shine 1.5s infinite;
+    }
+    .skeleton-body { padding: 14px 16px; }
+    .skeleton-line {
+      height: 12px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+      background-size: 200% 100%;
+      animation: skeleton-shine 1.5s infinite;
+      margin-bottom: 10px;
+    }
+    .skeleton-line.short { width: 60%; }
+
+    /* ===================== New Demo Modal ===================== */
+    .modal-icon-header {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--primary-light), #c7d2fe);
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+      margin-bottom: 14px;
+    }
+
+    /* ===================== Confirm Dialog ===================== */
+    .confirm-modal .modal {
+      max-width: 400px;
+    }
+    .confirm-icon {
+      width: 48px; height: 48px;
+      background: #fee2e2;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      margin: 0 auto 14px;
+    }
+    .confirm-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .confirm-desc {
+      font-size: 0.875rem;
+      color: var(--gray-500);
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 4px;
+    }
+
+    /* ===================== Folder chip (sidebar) ===================== */
+    .folder-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: var(--radius);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .folder-chip:hover {
+      background: var(--gray-50);
+      color: var(--gray-700);
+    }
+
+    /* ===================== User avatar ===================== */
+    .user-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .sidebar-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background var(--transition);
+      margin-bottom: 4px;
+    }
+    .sidebar-user:hover { background: var(--gray-50); }
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--gray-800);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar-user-role {
+      font-size: 0.7rem;
+      color: var(--gray-400);
+    }
+
+    /* ===================== Card delete animation ===================== */
+    .demo-card.removing {
+      animation: card-out 0.28s ease forwards;
+    }
+    @keyframes card-out {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0; transform: scale(0.92); }
+    }
+
+    .demo-card.appearing {
+      animation: card-in 0.3s ease forwards;
+    }
+    @keyframes card-in {
+      from { opacity: 0; transform: scale(0.94) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* ===================== View toggle ===================== */
+    .view-toggle {
+      display: flex;
+      gap: 2px;
+      background: var(--gray-100);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+    }
+    .view-toggle-btn {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      color: var(--gray-400);
+      transition: all var(--transition);
+    }
+    .view-toggle-btn.active {
+      background: #fff;
+      color: var(--gray-700);
+      box-shadow: var(--shadow-xs);
+    }
+
+    /* ===================== Search empty ===================== */
+    .search-empty {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--gray-400);
+    }
+    .search-empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .search-empty-title { font-size: 1rem; font-weight: 700; color: var(--gray-600); margin-bottom: 6px; }
+    .search-empty-desc { font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+
+<!-- ===================== Sidebar ===================== -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">D</div>
+    <span class="sidebar-logo-text">演示Demo</span>
+    <span class="sidebar-logo-badge">Beta</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section-label">工作区</div>
+
+    <div class="sidebar-item active" data-nav="all" onclick="switchNav('all')">
+      <span class="sidebar-item-icon">🏠</span>
+      <span>所有演示</span>
+      <span class="sidebar-item-badge" id="nav-badge-all">—</span>
+    </div>
+    <div class="sidebar-item" data-nav="starred" onclick="switchNav('starred')">
+      <span class="sidebar-item-icon">⭐</span>
+      <span>收藏</span>
+    </div>
+    <div class="sidebar-item" data-nav="folders" onclick="switchNav('folders')">
+      <span class="sidebar-item-icon">📁</span>
+      <span>文件夹</span>
+    </div>
+    <div class="sidebar-item" data-nav="analytics" onclick="switchNav('analytics')">
+      <span class="sidebar-item-icon">📊</span>
+      <span>数据看板</span>
+    </div>
+
+    <div class="sidebar-section-label" style="margin-top:8px;">团队</div>
+    <div class="folder-chip">
+      <span>🔵</span>
+      <span>产品团队</span>
+    </div>
+    <div class="folder-chip">
+      <span>🟣</span>
+      <span>销售演示</span>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="user-avatar">我</div>
+      <div class="sidebar-user-info">
+        <div class="sidebar-user-name">工作区管理员</div>
+        <div class="sidebar-user-role">免费计划</div>
+      </div>
+      <span style="color:var(--gray-400);font-size:0.85rem;">⋯</span>
+    </div>
+    <div class="sidebar-item" data-nav="settings" onclick="switchNav('settings')">
+      <span class="sidebar-item-icon">⚙️</span>
+      <span>设置</span>
+    </div>
+    <div class="sidebar-item" onclick="showHelp()">
+      <span class="sidebar-item-icon">❓</span>
+      <span>帮助</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ===================== Main Wrapper ===================== -->
+<div class="main-wrapper">
+
+  <!-- Top Header -->
+  <header class="topbar">
+    <h1 class="topbar-title" id="topbar-title">所有演示</h1>
+    <div class="topbar-divider"></div>
+
+    <div class="topbar-search-wrap">
+      <span class="topbar-search-icon">🔍</span>
+      <input
+        type="text"
+        class="topbar-search"
+        id="search-input"
+        placeholder="搜索演示..."
+        autocomplete="off"
+        oninput="onSearch(this.value)"
+      />
+    </div>
+
+    <div class="topbar-actions">
+      <select class="sort-select" id="sort-select" onchange="onSort(this.value)">
+        <option value="updatedAt">最近更新</option>
+        <option value="createdAt">创建时间</option>
+        <option value="title">名称 A-Z</option>
+        <option value="views">浏览次数</option>
+      </select>
+
+      <div class="view-toggle">
+        <div class="view-toggle-btn active" id="view-grid-btn" onclick="setView('grid')" title="网格视图">⊞</div>
+        <div class="view-toggle-btn" id="view-list-btn" onclick="setView('list')" title="列表视图">☰</div>
+      </div>
+
+      <button class="btn btn-primary btn-sm" onclick="openNewDemoModal()">
+        <span>＋</span>
+        <span>新建演示</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Content Area -->
+  <main class="content-area" id="content-area">
+
+    <!-- Stats Row -->
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon purple">🎬</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-label">演示总数</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue">👁</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-views">—</div>
+          <div class="stat-label">总浏览次数</div>
+        </div>
+        <span class="stat-trend" id="stat-views-trend" style="display:none">↑</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">✅</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-completion">—</div>
+          <div class="stat-label">平均完成率</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section header -->
+    <div class="section-header">
+      <div class="section-title">
+        <span>最近演示</span>
+        <span class="section-count" id="section-count">0</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-ghost btn-xs" style="font-size:0.75rem;color:var(--gray-500);" onclick="refreshList()">↻ 刷新</button>
+      </div>
+    </div>
+
+    <!-- Demo Grid -->
+    <div class="demo-grid" id="demo-grid">
+      <!-- Skeleton loading -->
+      <div class="skeleton-card" id="sk1">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+      <div class="skeleton-card" id="sk2">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+      <div class="skeleton-card" id="sk3">
+        <div class="skeleton-thumb"></div>
+        <div class="skeleton-body">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ===================== New Demo Modal ===================== -->
+<div class="modal-overlay" id="new-demo-modal" onclick="handleModalOutsideClick(event,'new-demo-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-icon-header">✨</div>
+        <div class="modal-title">创建新演示</div>
+      </div>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal('new-demo-modal')" aria-label="关闭" style="margin-top:-40px;">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="label" for="demo-title-input">演示名称</label>
+        <input
+          type="text"
+          id="demo-title-input"
+          class="input"
+          placeholder="未命名演示"
+          maxlength="80"
+          onkeydown="handleNewDemoKey(event)"
+        />
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="label" for="demo-desc-input">描述 <span style="font-weight:400;color:var(--gray-400)">（可选）</span></label>
+        <textarea
+          id="demo-desc-input"
+          class="textarea"
+          placeholder="简单介绍这个演示的用途..."
+          rows="3"
+          style="min-height:70px;resize:none;"
+        ></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('new-demo-modal')">取消</button>
+      <button class="btn btn-primary btn-sm" id="create-demo-btn" onclick="confirmCreateDemo()">
+        <span>开始创建</span>
+        <span>→</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Confirm Delete Modal ===================== -->
+<div class="modal-overlay confirm-modal" id="confirm-delete-modal" onclick="handleModalOutsideClick(event,'confirm-delete-modal')">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:400px;">
+    <div class="modal-body" style="padding-top:28px;text-align:center;">
+      <div class="confirm-icon">🗑️</div>
+      <div class="confirm-title">删除此演示？</div>
+      <p class="confirm-desc">删除后无法恢复，该演示及其所有步骤将被永久删除。</p>
+      <p class="confirm-desc" style="margin-top:4px;font-size:0.78rem;color:var(--gray-400);" id="confirm-demo-name"></p>
+    </div>
+    <div class="modal-footer" style="justify-content:center;gap:12px;padding-top:4px;">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('confirm-delete-modal')">取消</button>
+      <button class="btn btn-danger btn-sm" id="confirm-delete-btn" onclick="executeDelete()">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Toast Container ===================== -->
+<div id="toast-container"></div>
+
+<script src="js/db.js"></script>
+<script>
+// ===================== State =====================
+let allDemos = [];
+let filteredDemos = [];
+let searchQuery = '';
+let sortKey = 'updatedAt';
+let viewMode = 'grid';
+let pendingDeleteId = null;
+let activeDropdownCard = null;
+let currentNav = 'all';
+
+// ===================== Init =====================
+document.addEventListener('DOMContentLoaded', () => {
+  loadDemos();
+
+  // Close dropdowns on outside click
+  document.addEventListener('click', (e) => {
+    if (activeDropdownCard && !activeDropdownCard.contains(e.target)) {
+      closeAllDropdowns();
+    }
+  });
+
+  // ESC key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeAllModals();
+      closeAllDropdowns();
+    }
+  });
+});
+
+// ===================== Load & Render =====================
+async function loadDemos() {
+  try {
+    allDemos = await DemoDB.getAll();
+    updateStats(allDemos);
+    updateNavBadge(allDemos.length);
+    applyFilterAndSort();
+  } catch (err) {
+    console.error('Load error:', err);
+    showToast('加载演示列表失败', 'error');
+    renderError();
+  }
+}
+
+function applyFilterAndSort() {
+  // Filter
+  let list = allDemos.filter(d => {
+    if (!searchQuery) return true;
+    return d.title && d.title.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  // Sort
+  list = [...list].sort((a, b) => {
+    if (sortKey === 'title') return (a.title || '').localeCompare(b.title || '');
+    if (sortKey === 'views') return ((b.analytics && b.analytics.views) || 0) - ((a.analytics && a.analytics.views) || 0);
+    if (sortKey === 'createdAt') return (b.createdAt || 0) - (a.createdAt || 0);
+    return (b.updatedAt || 0) - (a.updatedAt || 0); // default: updatedAt
+  });
+
+  filteredDemos = list;
+  renderGrid(filteredDemos);
+  updateSectionCount(filteredDemos.length, allDemos.length);
+}
+
+function renderGrid(demos) {
+  const grid = document.getElementById('demo-grid');
+
+  if (demos.length === 0 && allDemos.length === 0) {
+    // True empty state
+    grid.innerHTML = buildEmptyState();
+    return;
+  }
+
+  if (demos.length === 0 && searchQuery) {
+    // Search no results
+    grid.innerHTML = `
+      <div class="search-empty">
+        <div class="search-empty-icon">🔍</div>
+        <div class="search-empty-title">未找到匹配的演示</div>
+        <div class="search-empty-desc">没有找到包含"${escHtml(searchQuery)}"的演示，试试其他关键词</div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = demos.map((demo, i) => buildDemoCard(demo, i)).join('');
+
+  // Animate cards in with staggered delay
+  grid.querySelectorAll('.demo-card').forEach((card, i) => {
+    card.style.animationDelay = `${i * 30}ms`;
+    card.classList.add('appearing');
+  });
+}
+
+function buildDemoCard(demo) {
+  const stepCount = (demo.steps && demo.steps.length) || 0;
+  const views = (demo.analytics && demo.analytics.views) || 0;
+  const dateStr = formatDate(demo.updatedAt);
+  const thumb = getThumbHtml(demo);
+  const isPublished = demo.isPublished;
+
+  return `
+    <div class="demo-card" id="card-${escHtml(demo.id)}" data-id="${escHtml(demo.id)}" onclick="handleCardClick(event, '${escHtml(demo.id)}')">
+      <div class="demo-thumb">
+        ${thumb}
+        ${stepCount > 0 ? `
+          <div class="demo-step-badge">
+            <div class="demo-step-badge-dot"></div>
+            ${stepCount} 步骤
+          </div>` : ''}
+        ${isPublished ? `<div class="demo-published-badge">已发布</div>` : ''}
+        <div class="demo-thumb-overlay">
+          <div class="demo-hover-actions">
+            <button class="demo-hover-btn preview" onclick="previewDemo(event,'${escHtml(demo.id)}')">
+              ▶ 预览
+            </button>
+            <button class="demo-hover-btn edit" onclick="editDemo(event,'${escHtml(demo.id)}')">
+              ✏ 编辑
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="demo-card-body">
+        <div class="demo-card-title" title="${escHtml(demo.title || '未命名演示')}">${escHtml(demo.title || '未命名演示')}</div>
+        <div class="demo-card-meta">
+          <span class="demo-card-date">🕐 ${dateStr}</span>
+          ${views > 0 ? `<span class="demo-card-views">👁 ${views}</span>` : ''}
+        </div>
+      </div>
+      <div class="demo-card-footer">
+        <button class="demo-action-btn primary-action" onclick="previewDemo(event,'${escHtml(demo.id)}')">▶ 预览</button>
+        <button class="demo-action-btn" onclick="copyLink(event,'${escHtml(demo.id)}')">🔗 复制链接</button>
+        <button class="demo-more-btn" onclick="toggleDropdown(event,'${escHtml(demo.id)}')" title="更多操作">⋯</button>
+        <div class="card-dropdown" id="dd-${escHtml(demo.id)}">
+          <div class="dropdown-item" onclick="editDemo(event,'${escHtml(demo.id)}')">
+            <span>✏️</span> 编辑演示
+          </div>
+          <div class="dropdown-item" onclick="previewDemo(event,'${escHtml(demo.id)}')">
+            <span>▶️</span> 预览演示
+          </div>
+          <div class="dropdown-item" onclick="copyLink(event,'${escHtml(demo.id)}')">
+            <span>🔗</span> 复制分享链接
+          </div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item" onclick="duplicateDemo(event,'${escHtml(demo.id)}')">
+            <span>📋</span> 复制演示
+          </div>
+          <div class="dropdown-divider"></div>
+          <div class="dropdown-item danger" onclick="askDeleteDemo(event,'${escHtml(demo.id)}','${escHtml(demo.title || '未命名演示')}')">
+            <span>🗑️</span> 删除
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function getThumbHtml(demo) {
+  // Use first step's imageDataUrl as thumbnail if available
+  const img = demo.steps && demo.steps[0] && demo.steps[0].imageDataUrl;
+  if (img) {
+    return `<img src="${img}" alt="${escHtml(demo.title || '')}" loading="lazy" />`;
+  }
+  // Gradient placeholder with icon based on step count
+  const colors = [
+    ['#e0e7ff','#c7d2fe','#6366f1'],
+    ['#fce7f3','#fbcfe8','#ec4899'],
+    ['#d1fae5','#a7f3d0','#10b981'],
+    ['#fef3c7','#fde68a','#f59e0b'],
+    ['#e0f2fe','#bae6fd','#0ea5e9'],
+  ];
+  const idx = demo.id ? demo.id.charCodeAt(0) % colors.length : 0;
+  const [light, mid, accent] = colors[idx];
+  const letter = (demo.title || '演').charAt(0).toUpperCase();
+  return `
+    <div class="demo-thumb-placeholder" style="background: linear-gradient(135deg, ${light} 0%, ${mid} 100%);">
+      <div style="width:48px;height:48px;background:${accent};border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,0.15);">${escHtml(letter)}</div>
+      <span class="demo-thumb-placeholder-text">${(demo.steps && demo.steps.length) ? demo.steps.length + ' 个步骤' : '空演示'}</span>
+    </div>`;
+}
+
+function buildEmptyState() {
+  return `
+    <div class="empty-state-wrap">
+      <div class="empty-state-illustration">🎬</div>
+      <div class="empty-state-title">还没有演示</div>
+      <p class="empty-state-desc">创建您的第一个产品演示，向用户展示产品功能，提升转化率。</p>
+      <button class="btn btn-primary" onclick="openNewDemoModal()">
+        <span>＋</span>
+        <span>新建演示</span>
+      </button>
+    </div>`;
+}
+
+function renderError() {
+  const grid = document.getElementById('demo-grid');
+  grid.innerHTML = `
+    <div class="empty-state-wrap">
+      <div class="empty-state-illustration">⚠️</div>
+      <div class="empty-state-title">加载失败</div>
+      <p class="empty-state-desc">无法加载演示列表，请刷新页面重试。</p>
+      <button class="btn btn-secondary" onclick="loadDemos()">重新加载</button>
+    </div>`;
+}
+
+// ===================== Stats =====================
+function updateStats(demos) {
+  const total = demos.length;
+  const totalViews = demos.reduce((s, d) => s + ((d.analytics && d.analytics.views) || 0), 0);
+  const avgCompletion = calcAvgCompletion(demos);
+
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-views').textContent = totalViews >= 1000
+    ? (totalViews / 1000).toFixed(1) + 'K'
+    : totalViews;
+
+  if (totalViews > 0) {
+    const trend = document.getElementById('stat-views-trend');
+    trend.style.display = '';
+    trend.textContent = '↑ 活跃';
+  }
+
+  document.getElementById('stat-completion').textContent = avgCompletion + '%';
+}
+
+function calcAvgCompletion(demos) {
+  const active = demos.filter(d => d.analytics && d.analytics.views > 0);
+  if (!active.length) return 0;
+  const sum = active.reduce((s, d) => {
+    const v = d.analytics.views || 0;
+    const c = d.analytics.completions || 0;
+    return s + (v > 0 ? c / v : 0);
+  }, 0);
+  return Math.round((sum / active.length) * 100);
+}
+
+function updateSectionCount(filtered, total) {
+  const el = document.getElementById('section-count');
+  el.textContent = filtered === total ? total : `${filtered} / ${total}`;
+}
+
+// ===================== Navigation =====================
+function switchNav(key) {
+  currentNav = key;
+  document.querySelectorAll('.sidebar-item[data-nav]').forEach(el => {
+    el.classList.toggle('active', el.dataset.nav === key);
+  });
+
+  const titles = {
+    all: '所有演示',
+    starred: '收藏',
+    folders: '文件夹',
+    analytics: '数据看板',
+    settings: '设置',
+  };
+  document.getElementById('topbar-title').textContent = titles[key] || '所有演示';
+
+  if (key === 'all') {
+    loadDemos();
+  } else {
+    showToast(`「${titles[key]}」功能即将上线`, 'default');
+  }
+}
+
+// ===================== Search & Sort =====================
+function onSearch(val) {
+  searchQuery = val.trim();
+  applyFilterAndSort();
+}
+
+function onSort(val) {
+  sortKey = val;
+  applyFilterAndSort();
+}
+
+// ===================== View Toggle =====================
+function setView(mode) {
+  viewMode = mode;
+  const grid = document.getElementById('demo-grid');
+  document.getElementById('view-grid-btn').classList.toggle('active', mode === 'grid');
+  document.getElementById('view-list-btn').classList.toggle('active', mode === 'list');
+
+  if (mode === 'list') {
+    grid.style.gridTemplateColumns = '1fr';
+    grid.style.gap = '8px';
+  } else {
+    grid.style.gridTemplateColumns = '';
+    grid.style.gap = '';
+  }
+}
+
+// ===================== Refresh =====================
+async function refreshList() {
+  await loadDemos();
+  showToast('列表已刷新', 'success');
+}
+
+// ===================== New Demo Modal =====================
+function openNewDemoModal() {
+  const modal = document.getElementById('new-demo-modal');
+  const input = document.getElementById('demo-title-input');
+  const desc = document.getElementById('demo-desc-input');
+  input.value = '';
+  desc.value = '';
+  modal.classList.add('open');
+  setTimeout(() => input.focus(), 120);
+}
+
+function handleNewDemoKey(e) {
+  if (e.key === 'Enter') confirmCreateDemo();
+}
+
+async function confirmCreateDemo() {
+  const input = document.getElementById('demo-title-input');
+  const desc = document.getElementById('demo-desc-input');
+  const btn = document.getElementById('create-demo-btn');
+
+  const title = input.value.trim() || '未命名演示';
+  const description = desc.value.trim();
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;"></div><span>创建中...</span>';
+
+  try {
+    const demo = createDemo(title);
+    demo.description = description;
+    await DemoDB.save(demo);
+    closeModal('new-demo-modal');
+    showToast('演示已创建', 'success');
+    window.location.href = `creator.html?id=${demo.id}`;
+  } catch (err) {
+    console.error(err);
+    showToast('创建失败，请重试', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '<span>开始创建</span><span>→</span>';
+  }
+}
+
+// ===================== Card Actions =====================
+function handleCardClick(e, id) {
+  // Don't navigate if clicking action buttons
+  if (e.target.closest('.demo-action-btn') ||
+      e.target.closest('.demo-more-btn') ||
+      e.target.closest('.card-dropdown') ||
+      e.target.closest('.demo-hover-btn')) return;
+  window.location.href = `creator.html?id=${id}`;
+}
+
+function editDemo(e, id) {
+  e.stopPropagation();
+  closeAllDropdowns();
+  window.location.href = `creator.html?id=${id}`;
+}
+
+function previewDemo(e, id) {
+  e.stopPropagation();
+  closeAllDropdowns();
+  window.open(`player.html?id=${id}`, '_blank');
+}
+
+function copyLink(e, id) {
+  e.stopPropagation();
+  closeAllDropdowns();
+  const url = `${location.origin}${location.pathname.replace('app.html', '')}player.html?id=${id}`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('分享链接已复制到剪贴板', 'success');
+    }).catch(() => fallbackCopy(url));
+  } else {
+    fallbackCopy(url);
+  }
+}
+
+function fallbackCopy(text) {
+  const el = document.createElement('textarea');
+  el.value = text;
+  el.style.position = 'fixed';
+  el.style.opacity = '0';
+  document.body.appendChild(el);
+  el.select();
+  try {
+    document.execCommand('copy');
+    showToast('分享链接已复制', 'success');
+  } catch {
+    showToast('复制失败，请手动复制', 'error');
+  }
+  document.body.removeChild(el);
+}
+
+async function duplicateDemo(e, id) {
+  e.stopPropagation();
+  closeAllDropdowns();
+  try {
+    showToast('正在复制演示...', 'default', 1500);
+    const copy = await DemoDB.duplicate(id);
+    await loadDemos();
+    showToast(`已创建副本：${copy.title}`, 'success');
+    // Highlight the new card briefly
+    setTimeout(() => {
+      const newCard = document.getElementById(`card-${copy.id}`);
+      if (newCard) {
+        newCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        newCard.style.outline = '2px solid var(--primary)';
+        setTimeout(() => { newCard.style.outline = ''; }, 2000);
+      }
+    }, 100);
+  } catch (err) {
+    console.error(err);
+    showToast('复制演示失败', 'error');
+  }
+}
+
+function askDeleteDemo(e, id, title) {
+  e.stopPropagation();
+  closeAllDropdowns();
+  pendingDeleteId = id;
+  document.getElementById('confirm-demo-name').textContent = `"${title}"`;
+  document.getElementById('confirm-delete-modal').classList.add('open');
+}
+
+async function executeDelete() {
+  if (!pendingDeleteId) return;
+  const id = pendingDeleteId;
+  const btn = document.getElementById('confirm-delete-btn');
+  btn.disabled = true;
+  btn.textContent = '删除中...';
+
+  try {
+    await DemoDB.delete(id);
+    closeModal('confirm-delete-modal');
+    pendingDeleteId = null;
+
+    // Animate card out
+    const card = document.getElementById(`card-${id}`);
+    if (card) {
+      card.classList.add('removing');
+      card.addEventListener('animationend', async () => {
+        allDemos = allDemos.filter(d => d.id !== id);
+        updateStats(allDemos);
+        applyFilterAndSort();
+      }, { once: true });
+    } else {
+      allDemos = allDemos.filter(d => d.id !== id);
+      updateStats(allDemos);
+      applyFilterAndSort();
+    }
+
+    showToast('演示已删除', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('删除失败，请重试', 'error');
+    btn.disabled = false;
+    btn.textContent = '确认删除';
+  }
+}
+
+// ===================== Dropdown =====================
+function toggleDropdown(e, id) {
+  e.stopPropagation();
+  const dd = document.getElementById(`dd-${id}`);
+  const card = dd.closest('.demo-card');
+  const isOpen = dd.classList.contains('open');
+
+  closeAllDropdowns();
+
+  if (!isOpen) {
+    dd.classList.add('open');
+    activeDropdownCard = card;
+  }
+}
+
+function closeAllDropdowns() {
+  document.querySelectorAll('.card-dropdown.open').forEach(el => el.classList.remove('open'));
+  activeDropdownCard = null;
+}
+
+// ===================== Modal Helpers =====================
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function closeAllModals() {
+  document.querySelectorAll('.modal-overlay.open').forEach(el => el.classList.remove('open'));
+}
+
+function handleModalOutsideClick(e, id) {
+  if (e.target === document.getElementById(id)) {
+    closeModal(id);
+  }
+}
+
+// ===================== Help =====================
+function showHelp() {
+  showToast('帮助文档即将上线，敬请期待 🚀', 'default', 4000);
+}
+
+// ===================== Sidebar badge =====================
+function updateNavBadge(count) {
+  const el = document.getElementById('nav-badge-all');
+  if (el) el.textContent = count;
+}
+
+// ===================== Utils =====================
+function escHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatDate(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  const now = new Date();
+  const diff = now - d;
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (mins < 1) return '刚刚';
+  if (mins < 60) return `${mins} 分钟前`;
+  if (hours < 24) return `${hours} 小时前`;
+  if (days < 7) return `${days} 天前`;
+  return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+}
+
+</script>
+</body>
+</html>
