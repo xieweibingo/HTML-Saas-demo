@@ -1,0 +1,4 @@
+node_modules/
+server/walkr.db
+server/walkr.db-shm
+server/walkr.db-wal
