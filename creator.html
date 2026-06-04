@@ -30,14 +30,14 @@ body { display: flex; flex-direction: column; background: var(--gray-50); }
   justify-content: center; color: #fff; font-size: 0.8rem; font-weight: 800;
 }
 .demo-title-input {
-  border: none; outline: none; font-size: 0.95rem; font-weight: 600;
+  border: 1.5px solid transparent; outline: none; font-size: 0.95rem; font-weight: 600;
   color: var(--gray-900); background: transparent; flex: 1;
   min-width: 0; max-width: 280px;
   padding: 4px 8px; border-radius: var(--radius-sm);
-  transition: background var(--transition);
+  transition: all var(--transition);
 }
-.demo-title-input:hover { background: var(--gray-100); }
-.demo-title-input:focus { background: var(--gray-100); }
+.demo-title-input:hover { background: var(--gray-100); border-color: var(--gray-200); }
+.demo-title-input:focus { background: var(--gray-100); border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.12); }
 .save-status {
   font-size: 0.78rem; color: var(--gray-400); white-space: nowrap;
   display: flex; align-items: center; gap: 5px;
@@ -432,6 +432,9 @@ body { display: flex; flex-direction: column; background: var(--gray-50); }
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
           <p>在画布上点击添加标注</p>
           <p style="font-size:0.75rem;margin-top:4px;">从工具栏选择标注类型，然后在图片上点击放置</p>
+          <button onclick="switchPropsTab('step')" style="margin-top:12px;padding:6px 14px;background:var(--primary-light);color:var(--primary);border:none;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;">
+            ✏️ 编辑步骤标题 / 旁白
+          </button>
         </div>
         <div id="annEditor" class="hidden">
           <div class="props-section">
@@ -838,6 +841,8 @@ function selectStep(idx) {
   $('voiceoverControls').style.display = step.voiceover.enabled ? 'block' : 'none';
   renderAnnotations();
   showNoAnnSelected();
+  // Default to step settings tab so title/voiceover fields are immediately visible
+  switchPropsTab('step');
 }
 
 // ===================== ANNOTATION RENDERING =====================
@@ -1534,10 +1539,14 @@ async function redo() {
 $('undoBtn').addEventListener('click', undo);
 $('redoBtn').addEventListener('click', redo);
 document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
-  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+  const tag = document.activeElement?.tagName;
+  const isEditing = tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable;
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey && !isEditing) { e.preventDefault(); undo(); }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey)) && !isEditing) { e.preventDefault(); redo(); }
   if (e.key === 'Delete' || e.key === 'Backspace') {
-    if (state.selectedAnnId && document.activeElement === document.body) {
+    const tag = document.activeElement?.tagName;
+    const isEditing = tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable;
+    if (state.selectedAnnId && !isEditing) {
       const step = state.demo.steps[state.currentStepIdx];
       if (step) {
         step.annotations = step.annotations.filter(a => a.id !== state.selectedAnnId);
