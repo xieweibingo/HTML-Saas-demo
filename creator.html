@@ -485,74 +485,84 @@ body { display: flex; flex-direction: column; background: var(--gray-50); }
         </div>
         <div id="annEditor" class="hidden">
           <div class="props-section">
-            <div class="props-section-title">标注类型</div>
-            <div class="props-field">
-              <select class="select" id="annType">
-                <option value="hotspot">● 脉冲热点</option>
-                <option value="callout">💬 气泡提示</option>
-                <option value="spotlight">✦ 聚光灯</option>
-                <option value="backdrop">◼ 遮罩背景</option>
-                <option value="rectangle">▭ 区域框选</option>
-                <option value="text">T 文字标注</option>
-                <option value="chapter">▣ 章节卡片</option>
-              </select>
+            <div class="props-section-header"><span class="section-icon">🏷️</span>标注类型</div>
+            <div class="props-section-body">
+              <div class="props-field">
+                <select class="select" id="annType">
+                  <option value="hotspot">● 脉冲热点</option>
+                  <option value="callout">💬 气泡提示</option>
+                  <option value="spotlight">✦ 聚光灯</option>
+                  <option value="backdrop">◼ 遮罩背景</option>
+                  <option value="rectangle">▭ 区域框选</option>
+                  <option value="text">T 文字标注</option>
+                  <option value="chapter">▣ 章节卡片</option>
+                </select>
+              </div>
             </div>
           </div>
           <div class="props-section">
-            <div class="props-section-title">内容</div>
-            <div class="props-field">
-              <label>标题</label>
-              <input type="text" class="input" id="annTitle" placeholder="输入标注标题">
-            </div>
-            <div class="props-field">
-              <label>描述</label>
-              <textarea class="textarea" id="annDesc" placeholder="输入描述文字（支持 Markdown）"></textarea>
+            <div class="props-section-header"><span class="section-icon">✏️</span>内容</div>
+            <div class="props-section-body">
+              <div class="props-field">
+                <label>标题</label>
+                <input type="text" class="input" id="annTitle" placeholder="输入标注标题">
+              </div>
+              <div class="props-field">
+                <label>描述</label>
+                <textarea class="textarea" id="annDesc" placeholder="输入描述文字（支持 Markdown）"></textarea>
+              </div>
             </div>
           </div>
           <div class="props-section" id="popupPosSection">
-            <div class="props-section-title">气泡方向</div>
-            <div class="placement-grid">
-              <div class="placement-btn" data-placement="top">↑ 上</div>
-              <div class="placement-btn" data-placement="bottom">↓ 下</div>
-              <div class="placement-btn" data-placement="left">← 左</div>
-              <div class="placement-btn" data-placement="right">→ 右</div>
-            </div>
-          </div>
-          <div class="props-section">
-            <div class="props-section-title">点击动作</div>
-            <div class="props-field">
-              <label>点击后</label>
-              <select class="select" id="annAction">
-                <option value="next">前往下一步</option>
-                <option value="goto">跳转到指定步骤</option>
-                <option value="url">打开链接</option>
-                <option value="none">无动作</option>
-              </select>
-            </div>
-            <div class="props-field hidden" id="gotoField">
-              <label>目标步骤</label>
-              <select class="select" id="annGotoTarget"></select>
-            </div>
-            <div class="props-field hidden" id="urlField">
-              <label>目标链接</label>
-              <input type="url" class="input" id="annUrlTarget" placeholder="https://...">
-            </div>
-          </div>
-          <div class="props-section">
-            <div class="props-section-title">样式</div>
-            <div class="props-field">
-              <label>颜色</label>
-              <div class="color-input-wrap" id="annColorWrap">
-                <input type="color" id="annColor" value="#6366f1">
-                <span id="annColorHex">#6366f1</span>
+            <div class="props-section-header"><span class="section-icon">📍</span>气泡方向</div>
+            <div class="props-section-body">
+              <div class="placement-grid">
+                <div class="placement-btn" data-placement="top">↑ 上</div>
+                <div class="placement-btn" data-placement="bottom">↓ 下</div>
+                <div class="placement-btn" data-placement="left">← 左</div>
+                <div class="placement-btn" data-placement="right">→ 右</div>
               </div>
             </div>
-            <div class="props-field" id="sizeSection">
-              <label>大小</label>
-              <div class="size-grid">
-                <div class="size-btn" data-size="sm">小</div>
-                <div class="size-btn active" data-size="md">中</div>
-                <div class="size-btn" data-size="lg">大</div>
+          </div>
+          <div class="props-section">
+            <div class="props-section-header"><span class="section-icon">⚡</span>点击动作</div>
+            <div class="props-section-body">
+              <div class="props-field">
+                <label>点击后</label>
+                <select class="select" id="annAction">
+                  <option value="next">前往下一步</option>
+                  <option value="goto">跳转到指定步骤</option>
+                  <option value="url">打开链接</option>
+                  <option value="none">无动作</option>
+                </select>
+              </div>
+              <div class="props-field hidden" id="gotoField">
+                <label>目标步骤</label>
+                <select class="select" id="annGotoTarget"></select>
+              </div>
+              <div class="props-field hidden" id="urlField">
+                <label>目标链接</label>
+                <input type="url" class="input" id="annUrlTarget" placeholder="https://...">
+              </div>
+            </div>
+          </div>
+          <div class="props-section">
+            <div class="props-section-header"><span class="section-icon">🎨</span>样式</div>
+            <div class="props-section-body">
+              <div class="props-field">
+                <label>颜色</label>
+                <div class="color-input-wrap" id="annColorWrap">
+                  <input type="color" id="annColor" value="#6366f1">
+                  <span id="annColorHex">#6366f1</span>
+                </div>
+              </div>
+              <div class="props-field" id="sizeSection">
+                <label>大小</label>
+                <div class="size-grid">
+                  <div class="size-btn" data-size="sm">小</div>
+                  <div class="size-btn active" data-size="md">中</div>
+                  <div class="size-btn" data-size="lg">大</div>
+                </div>
               </div>
             </div>
           </div>
@@ -565,47 +575,53 @@ body { display: flex; flex-direction: column; background: var(--gray-50); }
       <!-- Step Panel -->
       <div id="panelStep" class="hidden">
         <div class="props-section">
-          <div class="props-section-title">步骤信息</div>
-          <div class="props-field">
-            <label>步骤标题</label>
-            <input type="text" class="input" id="stepTitle" placeholder="步骤标题">
-          </div>
-        </div>
-        <div class="props-section">
-          <div class="props-section-title">🎙 语音旁白</div>
-          <div class="toggle-wrap">
-            <label><input type="checkbox" id="voiceEnabled"><span class="toggle"></span></label>
-            <span style="font-size:0.82rem;color:var(--gray-700)">启用语音旁白</span>
-          </div>
-          <div class="voiceover-controls" id="voiceoverControls" style="display:none;margin-top:8px;">
+          <div class="props-section-header"><span class="section-icon">📋</span>步骤信息</div>
+          <div class="props-section-body">
             <div class="props-field">
-              <label>旁白文字</label>
-              <textarea class="textarea" id="voiceText" placeholder="在此输入旁白文字，或点击 AI 生成..."></textarea>
-            </div>
-            <div class="props-field">
-              <label>语言 / 语音</label>
-              <select class="select" id="voiceLang">
-                <option value="zh-CN">中文（普通话）</option>
-                <option value="zh-TW">中文（台湾）</option>
-                <option value="en-US">英文（美式）</option>
-                <option value="en-GB">英文（英式）</option>
-              </select>
-            </div>
-            <div class="voice-playback">
-              <button class="voice-btn" id="voicePlayBtn" title="播放">▶</button>
-              <button class="voice-btn" id="voiceStopBtn" title="停止">■</button>
-              <button class="btn btn-xs btn-secondary" id="aiVoiceTextBtn">🤖 AI生成</button>
+              <label>步骤标题</label>
+              <input type="text" class="input" id="stepTitle" placeholder="步骤标题">
             </div>
           </div>
         </div>
         <div class="props-section">
-          <div class="props-section-title">替换图片</div>
-          <label class="upload-area" style="padding:12px;" id="replaceImageArea">
-            <input type="file" id="replaceImageInput" accept="image/*" style="display:none">
-            <div style="font-size:0.82rem">📁 点击替换当前截图</div>
-          </label>
+          <div class="props-section-header"><span class="section-icon">🎙️</span>语音旁白</div>
+          <div class="props-section-body">
+            <div class="toggle-wrap">
+              <label><input type="checkbox" id="voiceEnabled"><span class="toggle"></span></label>
+              <span style="font-size:0.82rem;color:var(--gray-700)">启用语音旁白</span>
+            </div>
+            <div class="voiceover-controls" id="voiceoverControls" style="display:none;margin-top:8px;">
+              <div class="props-field">
+                <label>旁白文字</label>
+                <textarea class="textarea" id="voiceText" placeholder="在此输入旁白文字，或点击 AI 生成..."></textarea>
+              </div>
+              <div class="props-field">
+                <label>语言 / 语音</label>
+                <select class="select" id="voiceLang">
+                  <option value="zh-CN">中文（普通话）</option>
+                  <option value="zh-TW">中文（台湾）</option>
+                  <option value="en-US">英文（美式）</option>
+                  <option value="en-GB">英文（英式）</option>
+                </select>
+              </div>
+              <div class="voice-playback">
+                <button class="voice-btn" id="voicePlayBtn" title="播放">▶</button>
+                <button class="voice-btn" id="voiceStopBtn" title="停止">■</button>
+                <button class="btn btn-xs btn-secondary" id="aiVoiceTextBtn">🤖 AI生成</button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="props-section" style="margin-top:8px">
+        <div class="props-section">
+          <div class="props-section-header"><span class="section-icon">🖼️</span>替换图片</div>
+          <div class="props-section-body">
+            <label class="upload-area" style="padding:12px;" id="replaceImageArea">
+              <input type="file" id="replaceImageInput" accept="image/*" style="display:none">
+              <div style="font-size:0.82rem">📁 点击替换当前截图</div>
+            </label>
+          </div>
+        </div>
+        <div class="props-field" style="margin-top:8px">
           <button class="btn btn-sm btn-danger w-full" id="deleteStepBtn">🗑 删除此步骤</button>
         </div>
       </div>
@@ -613,48 +629,54 @@ body { display: flex; flex-direction: column; background: var(--gray-50); }
       <!-- Demo Panel -->
       <div id="panelDemo" class="hidden">
         <div class="props-section">
-          <div class="props-section-title">品牌设置</div>
-          <div class="props-field">
-            <label>主题色</label>
-            <div class="color-input-wrap" id="brandColorWrap">
-              <input type="color" id="brandColor" value="#6366f1">
-              <span id="brandColorHex">#6366f1</span>
+          <div class="props-section-header"><span class="section-icon">🎨</span>品牌设置</div>
+          <div class="props-section-body">
+            <div class="props-field">
+              <label>主题色</label>
+              <div class="color-input-wrap" id="brandColorWrap">
+                <input type="color" id="brandColor" value="#6366f1">
+                <span id="brandColorHex">#6366f1</span>
+              </div>
+            </div>
+            <div class="props-field">
+              <label>下一步按钮文字</label>
+              <input type="text" class="input" id="brandNextBtn" placeholder="下一步" value="下一步">
+            </div>
+            <div class="props-field">
+              <label>结尾 CTA 文字</label>
+              <input type="text" class="input" id="brandCtaText" placeholder="立即体验">
+            </div>
+            <div class="props-field">
+              <label>结尾 CTA 链接</label>
+              <input type="url" class="input" id="brandCtaUrl" placeholder="https://...">
             </div>
           </div>
-          <div class="props-field">
-            <label>下一步按钮文字</label>
-            <input type="text" class="input" id="brandNextBtn" placeholder="下一步" value="下一步">
-          </div>
-          <div class="props-field">
-            <label>结尾 CTA 文字</label>
-            <input type="text" class="input" id="brandCtaText" placeholder="立即体验">
-          </div>
-          <div class="props-field">
-            <label>结尾 CTA 链接</label>
-            <input type="url" class="input" id="brandCtaUrl" placeholder="https://...">
+        </div>
+        <div class="props-section">
+          <div class="props-section-header"><span class="section-icon">👁️</span>显示设置</div>
+          <div class="props-section-body">
+            <div class="toggle-wrap" style="margin-bottom:8px">
+              <label><input type="checkbox" id="showBranding" checked><span class="toggle"></span></label>
+              <span style="font-size:0.82rem;color:var(--gray-700)">显示"由演示Demo创建"</span>
+            </div>
           </div>
         </div>
         <div class="props-section">
-          <div class="props-section-title">显示设置</div>
-          <div class="toggle-wrap" style="margin-bottom:8px">
-            <label><input type="checkbox" id="showBranding" checked><span class="toggle"></span></label>
-            <span style="font-size:0.82rem;color:var(--gray-700)">显示"由演示Demo创建"</span>
+          <div class="props-section-header"><span class="section-icon">🤖</span>AI 设置</div>
+          <div class="props-section-body">
+            <div class="props-field">
+              <label>Claude API Key</label>
+              <input type="password" class="input" id="claudeKeyInput" placeholder="sk-ant-..." autocomplete="off">
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;">
+              <span id="claudeKeyStatus" style="font-size:0.75rem;font-weight:600;"></span>
+              <button class="btn btn-sm btn-primary" id="saveClaudeKeyBtn">保存</button>
+            </div>
+            <p style="font-size:0.72rem;color:var(--gray-400);margin-top:6px;line-height:1.5;">
+              填入后，AI 标注/旁白/翻译功能将调用真实 Claude API。<br>
+              Key 存储于浏览器本地，不会上传至任何服务器。
+            </p>
           </div>
-        </div>
-        <div class="props-section">
-          <div class="props-section-title">🤖 AI 设置</div>
-          <div class="props-field">
-            <label>Claude API Key</label>
-            <input type="password" class="input" id="claudeKeyInput" placeholder="sk-ant-..." autocomplete="off">
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;">
-            <span id="claudeKeyStatus" style="font-size:0.75rem;font-weight:600;"></span>
-            <button class="btn btn-sm btn-primary" id="saveClaudeKeyBtn">保存</button>
-          </div>
-          <p style="font-size:0.72rem;color:var(--gray-400);margin-top:6px;line-height:1.5;">
-            填入后，AI 标注/旁白/翻译功能将调用真实 Claude API。<br>
-            Key 存储于浏览器本地，不会上传至任何服务器。
-          </p>
         </div>
       </div>
     </div>
