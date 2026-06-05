@@ -193,57 +193,104 @@ body { display: flex; flex-direction: column; background: var(--gray-50); }
 .canvas-container:hover .crosshair-h,
 .canvas-container:hover .crosshair-v { display: block; }
 
-/* ====== Right Panel: Properties ====== */
+/* ====== Right Panel: Properties (redesigned) ====== */
 .props-panel {
-  width: 264px; flex-shrink: 0;
-  background: #fff; border-left: 1px solid var(--gray-200);
+  width: 280px; flex-shrink: 0;
+  background: #fafbfc; border-left: 1px solid var(--gray-200);
   display: flex; flex-direction: column;
   overflow: hidden;
 }
-.props-tabs { padding: 0 12px; border-bottom: 1px solid var(--gray-100); }
-.props-scroll { flex: 1; overflow-y: auto; padding: 14px 14px 80px; }
-.props-section { margin-bottom: 20px; }
-.props-section-title {
-  font-size: 0.72rem; font-weight: 700; color: var(--gray-400);
-  letter-spacing: 0.06em; text-transform: uppercase;
-  margin-bottom: 10px;
+.props-tabs {
+  background: #fff;
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0;
 }
-.props-field { margin-bottom: 12px; }
-.props-field label { font-size: 0.78rem; font-weight: 600; color: var(--gray-600); display: block; margin-bottom: 4px; }
-.props-field .input, .props-field .select, .props-field .textarea { font-size: 0.82rem; padding: 7px 10px; }
-.props-field .textarea { min-height: 60px; }
+.props-tabs .tabs {
+  display: flex;
+  gap: 0;
+  padding: 0;
+}
+.props-tabs .tab {
+  flex: 1; padding: 11px 6px; font-size: 0.77rem; font-weight: 600;
+  color: var(--gray-400); border: none; background: none; cursor: pointer;
+  border-bottom: 2px solid transparent; text-align: center;
+  transition: all var(--transition); white-space: nowrap;
+}
+.props-tabs .tab:hover { color: var(--gray-700); }
+.props-tabs .tab.active { color: var(--primary); border-bottom-color: var(--primary); background: none; }
+.props-scroll { flex: 1; overflow-y: auto; padding: 12px 12px 80px; }
+.props-section {
+  background: #fff; border: 1px solid var(--gray-200);
+  border-radius: var(--radius); margin-bottom: 10px;
+  overflow: hidden;
+}
+.props-section-header {
+  display: flex; align-items: center; gap: 7px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 0.72rem; font-weight: 700; color: var(--gray-500);
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.props-section-header .section-icon {
+  width: 18px; height: 18px; border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; flex-shrink: 0;
+}
+.props-section-body { padding: 10px 12px 12px; }
+.props-field { margin-bottom: 10px; }
+.props-field:last-child { margin-bottom: 0; }
+.props-field label {
+  font-size: 0.75rem; font-weight: 600; color: var(--gray-600);
+  display: block; margin-bottom: 4px;
+}
+.props-field .input, .props-field .select, .props-field .textarea {
+  font-size: 0.82rem; padding: 7px 10px;
+  border-radius: var(--radius-sm);
+}
+.props-field .textarea { min-height: 58px; }
 .placement-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .placement-btn {
-  padding: 6px; border-radius: var(--radius-sm);
+  padding: 7px 4px; border-radius: var(--radius-sm);
   border: 1.5px solid var(--gray-200);
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.7rem; cursor: pointer;
+  font-size: 0.72rem; cursor: pointer; font-weight: 500;
   color: var(--gray-500); transition: all var(--transition);
+  background: #fff;
 }
 .placement-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
 .placement-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
 .size-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
 .size-btn {
-  padding: 6px; border-radius: var(--radius-sm);
+  padding: 7px; border-radius: var(--radius-sm);
   border: 1.5px solid var(--gray-200);
-  text-align: center; font-size: 0.72rem; cursor: pointer;
-  color: var(--gray-500); transition: all var(--transition);
+  text-align: center; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  color: var(--gray-500); transition: all var(--transition); background: #fff;
 }
-.size-btn:hover, .size-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+.size-btn:hover { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+.size-btn.active { border-color: var(--primary); background: var(--primary); color: #fff; }
 .no-step-selected {
-  padding: 32px 16px; text-align: center; color: var(--gray-400);
+  padding: 36px 16px; text-align: center; color: var(--gray-400);
 }
-.no-step-selected svg { margin: 0 auto 12px; opacity: 0.3; }
+.no-step-selected svg { margin: 0 auto 16px; opacity: 0.2; }
+.no-step-selected p { font-size: 0.82rem; line-height: 1.55; }
+
+/* ====== AI Backdrop ====== */
+.ai-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.15); z-index: 199;
+}
+.ai-backdrop.show { display: block; }
 
 /* ====== AI Panel ====== */
 .ai-panel {
-  position: fixed; right: 264px; top: 56px; bottom: 0;
-  width: 280px; background: #fff;
+  position: fixed; right: 0; top: 56px; bottom: 0;
+  width: 300px; background: #fff;
   border-left: 1px solid var(--gray-200);
-  z-index: 40; transform: translateX(280px);
+  z-index: 200;
+  transform: translateX(300px);
   transition: transform 0.25s ease;
   display: flex; flex-direction: column;
-  box-shadow: -8px 0 32px rgba(0,0,0,0.08);
+  box-shadow: -8px 0 32px rgba(0,0,0,0.12);
 }
 .ai-panel.open { transform: translateX(0); }
 .ai-panel-header {
@@ -613,6 +660,9 @@ body { display: flex; flex-direction: column; background: var(--gray-50); }
     </div>
   </div>
 </div>
+
+<!-- AI Backdrop -->
+<div class="ai-backdrop" id="aiBackdrop"></div>
 
 <!-- AI Panel -->
 <div class="ai-panel" id="aiPanel">
@@ -997,11 +1047,87 @@ function createAnnotationEl(ann, brandColor, btnText) {
   return null;
 }
 
+function startInlineEdit(ann, el) {
+  if (ann.type === 'text') {
+    // For text annotations: make the element directly contenteditable
+    el.contentEditable = 'true';
+    el.style.outline = '2px solid var(--primary)';
+    el.style.cursor = 'text';
+    el.focus();
+    // Select all
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    const finish = () => {
+      el.contentEditable = 'false';
+      el.style.outline = '';
+      el.style.cursor = '';
+      const newText = el.textContent.trim() || '文字标注';
+      ann.title = newText;
+      $('annTitle').value = newText;
+      markDirty(); autoSave(); pushHistory();
+    };
+    el.addEventListener('blur', finish, { once: true });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+      if (e.key === 'Escape') { el.textContent = ann.title || '文字标注'; el.blur(); }
+    });
+    return;
+  }
+
+  // For callout / hotspot / rectangle: edit the title element inline
+  const titleEl = el.querySelector('.ann-popup-title, .rect-label, .chapter-title');
+  if (!titleEl) {
+    // Fallback: focus props panel title input
+    selectAnnotation(ann.id);
+    setTimeout(() => $('annTitle')?.focus(), 50);
+    return;
+  }
+
+  const originalText = titleEl.textContent;
+  titleEl.contentEditable = 'true';
+  titleEl.style.outline = '2px solid var(--primary)';
+  titleEl.style.borderRadius = '3px';
+  titleEl.style.cursor = 'text';
+  titleEl.focus();
+  const range = document.createRange();
+  range.selectNodeContents(titleEl);
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  const finish = () => {
+    titleEl.contentEditable = 'false';
+    titleEl.style.outline = '';
+    titleEl.style.borderRadius = '';
+    titleEl.style.cursor = '';
+    const newText = titleEl.textContent.trim() || originalText;
+    titleEl.textContent = newText;
+    ann.title = newText;
+    $('annTitle').value = newText;
+    markDirty(); autoSave(); pushHistory();
+  };
+  titleEl.addEventListener('blur', finish, { once: true });
+  titleEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); titleEl.blur(); }
+    if (e.key === 'Escape') { titleEl.textContent = originalText; titleEl.blur(); }
+  });
+}
+
 function setupAnnInteraction(el, ann) {
   el.addEventListener('click', e => {
     e.stopPropagation();
     if (state.activeTool !== 'select') return;
     selectAnnotation(ann.id);
+  });
+
+  // Double-click to inline edit text
+  el.addEventListener('dblclick', e => {
+    e.stopPropagation();
+    if (!['callout','text','hotspot','rectangle'].includes(ann.type)) return;
+    startInlineEdit(ann, el);
   });
 
   // Make draggable
@@ -1568,13 +1694,19 @@ $('previewBtn').addEventListener('click', async () => {
 
 // ===================== AI PANEL =====================
 $('aiBtn').addEventListener('click', () => {
-  const panel = $('aiPanel');
   state.aiPanelOpen = !state.aiPanelOpen;
-  panel.classList.toggle('open', state.aiPanelOpen);
+  $('aiPanel').classList.toggle('open', state.aiPanelOpen);
+  $('aiBackdrop').classList.toggle('show', state.aiPanelOpen);
 });
 $('closeAiPanel').addEventListener('click', () => {
   state.aiPanelOpen = false;
   $('aiPanel').classList.remove('open');
+  $('aiBackdrop').classList.remove('show');
+});
+$('aiBackdrop').addEventListener('click', () => {
+  state.aiPanelOpen = false;
+  $('aiPanel').classList.remove('open');
+  $('aiBackdrop').classList.remove('show');
 });
 
 $('aiAutoAnnotate').addEventListener('click', async () => {
